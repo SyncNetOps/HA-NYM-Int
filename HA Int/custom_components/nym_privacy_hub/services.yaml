@@ -1,0 +1,26 @@
+test_connection:
+  name: Mixnet Verbindungstest
+  description: Führt einen direkten Latenz- und Verbindungstest über den lokalen Nym SOCKS5 Proxy durch.
+
+send_anonymous_request:
+  name: Anonyme HTTP-Anfrage senden
+  description: Führt eine HTTP GET/POST-Anfrage anonymisiert über das Nym Mixnet aus.
+  fields:
+    url:
+      name: Ziel-URL
+      description: Die abzurufende Web- oder API-URL.
+      required: true
+      example: "https://api.ipify.org?format=json"
+      selector:
+        text:
+    method:
+      name: HTTP-Methode
+      description: GET oder POST
+      required: false
+      default: "GET"
+      example: "GET"
+      selector:
+        select:
+          options:
+            - "GET"
+            - "POST"
