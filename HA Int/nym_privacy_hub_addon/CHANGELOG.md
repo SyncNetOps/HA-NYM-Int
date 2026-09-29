@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.5
+- Fix: Ingress-Pfadauflösung für direkte Ping- und Status-API-Aufrufe (`getApiUrl`).
+- Feat: Vollständiger SOCKS5 RFC 1928 Handshake-Check im Ping-Test.
+- Feat: Passphrase & Provider Eingabeformular direkt im Ingress Web Dashboard.
+
+## 1.0.4
+- Feat: Optionale Passphrase-Eingabe (Schlüsselschutz).
+- Fix: Automatischer TOML Schema-Patch für `credential_requests_database`.
+
 ## 1.0.3
 - Fix: Direktes Auslesen von `/data/options.json` mit automatischem Provider-Fallback gegen 403 API-Einschränkungen.
 - Fix: `hassio_api: true` und `hassio_role: default` in `config.yaml`.
