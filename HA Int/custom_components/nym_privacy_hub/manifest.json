@@ -1,0 +1,12 @@
+{
+  "domain": "nym_privacy_hub",
+  "name": "Nym Privacy Hub",
+  "version": "1.0.1",
+  "codeowners": ["@SyncNetOps"],
+  "config_flow": true,
+  "documentation": "https://github.com/SyncNetOps/HA-NYM-Int",
+  "issue_tracker": "https://github.com/SyncNetOps/HA-NYM-Int/issues",
+  "dependencies": [],
+  "requirements": ["aiohttp_socks>=0.8.4"],
+  "iot_class": "local_polling"
+}

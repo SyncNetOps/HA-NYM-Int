@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Nym Privacy Hub",
+        "description": "Connect Home Assistant to the local Nym Mixnet SOCKS5 proxy.",
+        "data": {
+          "proxy_host": "SOCKS5 Proxy Host / IP",
+          "proxy_port": "SOCKS5 Proxy Port",
+          "ai_voice_privacy": "Enable AI & Voice Privacy",
+          "geo_weather_privacy": "Anonymize Weather & Geo Data",
+          "cover_traffic": "Enable Anti-Burglary Cover Traffic"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nym Privacy Hub Settings",
+        "data": {
+          "ai_voice_privacy": "Enable AI & Voice Privacy",
+          "geo_weather_privacy": "Anonymize Weather & Geo Data",
+          "cover_traffic": "Anti-Burglary Cover Traffic",
+          "cover_traffic_rate": "Cover Traffic Rate (packets / min)",
+          "custom_provider": "Custom Nym Exit Provider Address"
+        }
+      }
+    }
+  },
+  "services": {
+    "test_connection": {
+      "name": "Mixnet Connection Test",
+      "description": "Performs a direct latency and connectivity test via local Nym SOCKS5 proxy."
+    },
+    "send_anonymous_request": {
+      "name": "Send Anonymous Request",
+      "description": "Executes an HTTP GET/POST request routed anonymously through Nym Mixnet."
+    }
+  }
+}
