@@ -17,6 +17,7 @@ from .const import (
     CONF_COVER_TRAFFIC_RATE,
     CONF_CUSTOM_PROVIDER,
     CONF_GEO_WEATHER_PRIVACY,
+    CONF_PASSPHRASE,
     CONF_PROXY_HOST,
     CONF_PROXY_PORT,
     DEFAULT_AI_VOICE_PRIVACY,
@@ -64,6 +65,7 @@ class NymConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_COVER_TRAFFIC, default=DEFAULT_COVER_TRAFFIC
                 ): cv.boolean,
+                vol.Optional(CONF_PASSPHRASE, default=""): cv.string,
             }
         )
 
@@ -131,6 +133,10 @@ class NymOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_CUSTOM_PROVIDER,
                     default=options.get(CONF_CUSTOM_PROVIDER, ""),
+                ): cv.string,
+                vol.Optional(
+                    CONF_PASSPHRASE,
+                    default=options.get(CONF_PASSPHRASE, ""),
                 ): cv.string,
             }
         )

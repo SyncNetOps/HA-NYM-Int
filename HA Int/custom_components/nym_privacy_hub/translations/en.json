@@ -9,7 +9,8 @@
           "proxy_port": "SOCKS5 Proxy Port",
           "ai_voice_privacy": "Enable AI & Voice Privacy",
           "geo_weather_privacy": "Anonymize Weather & Geo Data",
-          "cover_traffic": "Enable Anti-Burglary Cover Traffic"
+          "cover_traffic": "Enable Anti-Burglary Cover Traffic",
+          "passphrase": "Optional Passphrase (Key Security)"
         }
       }
     }
@@ -23,7 +24,8 @@
           "geo_weather_privacy": "Anonymize Weather & Geo Data",
           "cover_traffic": "Anti-Burglary Cover Traffic",
           "cover_traffic_rate": "Cover Traffic Rate (packets / min)",
-          "custom_provider": "Custom Nym Exit Provider Address"
+          "custom_provider": "Custom Nym Exit Provider Address",
+          "passphrase": "Optional Passphrase (Key Security)"
         }
       }
     }

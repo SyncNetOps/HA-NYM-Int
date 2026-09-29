@@ -9,7 +9,8 @@
           "proxy_port": "SOCKS5 Proxy Port",
           "ai_voice_privacy": "KI & Voice Privacy aktivieren",
           "geo_weather_privacy": "Wetter & Geodaten anonymisieren",
-          "cover_traffic": "Anti-Einbruchs-Schutz (Cover Traffic) aktivieren"
+          "cover_traffic": "Anti-Einbruchs-Schutz (Cover Traffic) aktivieren",
+          "passphrase": "Optionale Passphrase (Schlüssel-Schutz)"
         }
       }
     }
@@ -23,7 +24,8 @@
           "geo_weather_privacy": "Wetter & Geodaten anonymisieren",
           "cover_traffic": "Anti-Einbruchs-Schutz (Cover Traffic)",
           "cover_traffic_rate": "Cover Traffic Rate (Pakete / Minute)",
-          "custom_provider": "Benutzerdefinierte Nym Exit-Provider Adresse"
+          "custom_provider": "Benutzerdefinierte Nym Exit-Provider Adresse",
+          "passphrase": "Optionale Passphrase (Schlüssel-Schutz)"
         }
       }
     }

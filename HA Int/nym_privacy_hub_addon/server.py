@@ -28,6 +28,7 @@ def get_options():
         "use_reply_surbs": True,
         "cover_traffic": False,
         "cover_traffic_rate": 10,
+        "passphrase": "",
         "log_level": "info"
     }
 
@@ -55,6 +56,7 @@ START_TIME = time.time()
 def get_stats():
     options = get_options()
     is_socket_open = check_socks5_socket()
+    has_pass = bool(options.get("passphrase"))
     return {
         "status": "connected" if is_socket_open else "initializing",
         "proxy_endpoint": f"socks5://{SOCKS5_HOST}:{SOCKS5_PORT}",
@@ -63,6 +65,7 @@ def get_stats():
         "use_reply_surbs": options.get("use_reply_surbs", True),
         "cover_traffic": options.get("cover_traffic", False),
         "cover_traffic_rate": options.get("cover_traffic_rate", 10),
+        "has_passphrase": has_pass,
         "uptime_sec": int(time.time() - START_TIME),
         "mixnet_nodes": 839,
         "active_gateways": 607,
@@ -165,9 +168,14 @@ HTML_PAGE = """<!DOCTYPE html>
                     <p style="font-size: 13px; color: var(--text-muted);">Mixnet SOCKS5 Daemon & Ingress Cockpit</p>
                 </div>
             </div>
-            <div class="status-badge" id="statusBadge">
-                <span class="pulse-dot"></span>
-                <span id="statusText">Mixnet Aktiv</span>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <div class="status-badge" id="passBadge" style="background: rgba(139, 92, 246, 0.15); border-color: #8b5cf6; color: #c4b5fd;">
+                    <span>🔐 Passphrase: <span id="passStatus">Standard</span></span>
+                </div>
+                <div class="status-badge" id="statusBadge">
+                    <span class="pulse-dot"></span>
+                    <span id="statusText">Mixnet Aktiv</span>
+                </div>
             </div>
         </header>
 
@@ -218,6 +226,7 @@ HTML_PAGE = """<!DOCTYPE html>
                 document.getElementById('statNodes').textContent = data.mixnet_nodes;
                 document.getElementById('statGateways').textContent = data.active_gateways;
                 document.getElementById('statExits').textContent = data.exit_nodes;
+                document.getElementById('passStatus').textContent = data.has_passphrase ? "Aktiviert (Eigener Schlüssel)" : "Standard";
                 const badge = document.getElementById('statusBadge');
                 const text = document.getElementById('statusText');
                 if (data.socket_active) {

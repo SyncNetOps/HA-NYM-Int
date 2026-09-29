@@ -10,6 +10,7 @@ CONF_GEO_WEATHER_PRIVACY = "geo_weather_privacy"
 CONF_COVER_TRAFFIC = "cover_traffic"
 CONF_COVER_TRAFFIC_RATE = "cover_traffic_rate"
 CONF_CUSTOM_PROVIDER = "custom_provider"
+CONF_PASSPHRASE = "passphrase"
 
 # Defaults
 DEFAULT_PROXY_HOST = "127.0.0.1"
