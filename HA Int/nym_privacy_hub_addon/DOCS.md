@@ -17,112 +17,67 @@ Klassische VPNs verschlüsseln zwar den Datenstrom, leiten aber alle Daten über
 
 ---
 
-## 🎛️ Ausführliche Funktionsübersicht & Live-Cockpit
+## 🎛️ Ausführliche Funktionsübersicht der 5 Cockpit-Tabs
 
-### 1. 🖥️ Integriertes Ingress Web-Cockpit (HA Seitenleiste)
-* **Animierter 3-Hop Live Route Visualizer**: Zeigt in Echtzeit den Fluss von Home Assistant über das Entry Gateway, Mix Layer 1 (Delay), Mix Layer 2 (Reordering), Mix Layer 3 (Entschlüsselung) und den Exit-Provider ins Ziel-Internet.
-* **Interaktiver Krypto-Hop-Inspektor**: Ein Klick auf einen beliebigen Knoten im Pfad öffnet eine detaillierte Aufschlüsselung der dort stattfindenden kryptografischen Aktionen.
-* **Echtzeit-Durchsatz & Canvas Chart (60s Stream)**: Flüssiges Live-Diagramm von Nutzdatenströmen (KB/s) und Cover-Traffic Loops.
-* **Live Datenstrom & Proxy-Inspector**: Übersichtliche Tabelle aktiver Streams (z.B. Wetterabfragen, KI-Prompts, Gateway Heartbeats) mit Ziel, Paketgrößen und Anonymisierungsstatus.
-* **Live Mixnet IP & Geo-Check**: Testet den SOCKS5-Tunnel und zeigt die verschleierte Exit-IP an – der direkte Beweis für absolute IP-Leck-Freiheit.
-
-### 2. 🧅 Universeller SOCKS5 Proxy (Port `1080`)
-* Das Add-on stellt lokal unter `socks5://127.0.0.1:1080` einen SOCKS5-Proxy bereit.
-* **Kompatibel mit allen HA-Diensten**: Leite Telegram-Bots, Push-Benachrichtigungen, OpenAI-/Anthropic-Integrationen oder HTTP-Sensoren direkt durch das Mixnet.
-
-### 3. 🎯 1-Klick Schutzlevel-Presets & Schieberegler
-* **⚡ Eco Mode**: 0 Cover-Traffic, minimale Latenz (~250-400ms), optimal für Cloud-Sensoren & Wetterabfragen.
-* **🛡️ High Privacy (Standard Empfohlen)**: 10 Pkt/min Cover-Traffic Rauschen, SURBs aktiv, vollkommener Anti-Timing-Schutz.
-* **🕵️ Ultra Stealth**: 35 Pkt/min Cover-Traffic, permanenter Scheindatenstrom zur Täuschung von ISP- und Router-Spionen.
-* **Granularer Schieberegler**: Stufenlose Anpassung des Cover-Traffics von 0 bis 60 Pakete/min mit Live-Berechnung der Bandbreite (~2.7 KB pro Paket).
-
-### 4. 🌍 Globale Exit-Provider Auswahl
-Wähle mit einem Klick das Land, aus dem deine Smart-Home-Anfragen im Internet erscheinen:
-* 🇨🇭 **Schweiz** (SpectreDAO Exit Node)
-* 🇩🇪 **Deutschland** (Nym Core Exit)
-* 🇮🇸 **Island** (Privacy Haven Node)
-* 🇫🇮 **Finnland** (Nordic Mix Exit)
-* 🇳🇱 **Niederlande** (Amsterdam Mix Exit)
-* 🇸🇬 **Singapur** (Asia Pacific Hub)
-* ⚙️ **Benutzerdefiniert**: Beliebige Nym Exit Node Adresse einbinden.
+### 1. 📊 Tab: Live Cockpit
+* **Animierter 3-Hop Route Visualizer**: Zeigt in Echtzeit den Datenfluss von Home Assistant über das Entry Gateway, Mix Layer 1, Mix Layer 2, Mix Layer 3 und den Exit-Provider ins Internet.
+* **Krypto-Hop-Inspektor**: Klick auf beliebige Knoten zeigt die exakten mathematischen und kryptografischen Abläufe (z.B. Poisson Delay, Reordering, Schicht-Entschlüsselung).
+* **60s Echtzeit-Durchsatz Canvas Chart**: Reibungslose Darstellung von echten Nutzdatenströmen (KB/s) und Cover-Traffic Schleifen.
+* **Live Datenstrom & Proxy-Inspector**: Tabelle aller aktiven Verbindungen durch den SOCKS5-Proxy mit Ziel und Paketgrößen.
+* **Live IP-Leak & Geo-Check**: Testet den SOCKS5-Tunnel und beweist die vollkommene Verschleierung der eigenen Provider-IP.
 
 ---
 
-## 📖 Schritt-für-Schritt Bedienungsanleitung
+### 2. 🛡️ Tab: HA Datenquellen-Schutz (Dynamisches Routing)
+Hier kannst du für jede Smart-Home Komponente einzeln und dynamisch festlegen, ob sie über das Nym Mixnet geschützt werden soll:
 
-### Schritt 1: Installation & Start (1-Klick)
-1. Klicke im Home Assistant Add-on Store beim **Nym Privacy Hub** auf **Installieren**.
-2. Klicke auf **Starten** und aktiviere den Schalter **In der Seitenleiste anzeigen**.
-3. Öffne das Dashboard über den neuen Menüpunkt **Nym Privacy** in der linken Seitenleiste.
-
----
-
-### Schritt 2: Nutzung in anderen Home Assistant Integrationen
-
-Du kannst den Proxy in jeder beliebigen Home Assistant Integration verwenden, die SOCKS5 oder HTTP-Proxys unterstützt:
-
-#### Beispiel A: Telegram Bot Anonymisierung
-Trage in deiner `configuration.yaml` folgendes ein:
-```yaml
-telegram_bot:
-  - platform: polling
-    api_key: !secret telegram_token
-    allowed_chat_ids:
-      - 123456789
-    proxy_url: socks5://127.0.0.1:1080
-```
-
-#### Beispiel B: REST / HTTP Sensoren über Mixnet
-```yaml
-sensor:
-  - platform: rest
-    name: "Anonyme Wetterdaten"
-    resource: "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true"
-    proxy_url: socks5://127.0.0.1:1080
-    value_template: "{{ value_json.current_weather.temperature }}"
-    unit_of_measurement: "°C"
-```
-
-#### Beispiel C: Shell Command mit SOCKS5 Proxy
-```yaml
-shell_command:
-  send_secure_alert: "curl -x socks5h://127.0.0.1:1080 -X POST https://webhook.site/my-uuid -d 'status=alarm'"
-```
+| Datenquelle | Geschützte Dienste | Verhindertes Risiko |
+|---|---|---|
+| **🤖 KI & Sprachassistenten** | `OpenAI`, `Anthropic`, `HA Assist Prompts`, `ElevenLabs` | Verhindert Haushalts-Profiling & Sprachbefehl-Korrelation |
+| **🌦️ Wetter & Geodaten** | `Open-Meteo`, `AccuWeather`, `Nominatim`, `Sun/Astro` | Verhindert exakte GPS-Standortermittlung des Smart Homes |
+| **📱 Messenger & Bots** | `Telegram Bot`, `Signal CLI`, `Discord`, `Pushover` | Maskiert Anwesenheitszustände und Alarmmeldungen vor ISP-Spionage |
+| **⚡ Dynamische Strompreise** | `Tibber API`, `Nordpool`, `Entso-E` | Verhindert Analyse von Ladezyklen (Elektroauto / Wärmepumpe) |
+| **☁️ Cloud-Backups & Sync** | `Nextcloud`, `Google Drive Backup`, `WebDAV` | Verschleiert Offsite-Backup Zeitstempel & Datenmengen |
+| **🌐 Eigene REST & Scrape Sensoren** | Alle individuellen HTTP-Endpunkte | Verhindert IP-Korrelation über mehrere Cloud-Dienste hinweg |
 
 ---
 
-## ⚙️ Konfigurationsoptionen
-
-| Parameter | Typ | Standardwert | Beschreibung |
-|---|---|---|---|
-| `provider` | `str` | *Schweiz Exit* | Nym-Adresse des Exit-Gateways, über das Daten das Mixnet verlassen. |
-| `use_reply_surbs` | `bool` | `true` | Aktiviert Single Use Reply Blocks für vollkommen anonyme Antwortrouten. |
-| `cover_traffic` | `bool` | `false` | Aktiviert künstlichen Hintergrund-Datenverkehr zum Schutz vor Timing-Analysen. |
-| `cover_traffic_rate`| `int` | `10` | Anzahl der Cover-Traffic Pakete pro Minute (1 - 60). |
-| `surb_buffer_size` | `int` | `50` | Größe des vorgehaltenen SURB-Token-Puffers (20, 50, 100). |
-| `anonymity_mode` | `list` | `high_privacy` | Vorkonfiguriertes Schutzlevel (`eco`, `high_privacy`, `ultra_stealth`). |
-| `passphrase` | `password`| `""` | Optionale Passphrase zur Absicherung deiner kryptografischen Mixnet-Schlüssel. |
-| `log_level` | `list` | `info` | Detaillierungsgrad der Protokolle (`trace`, `debug`, `info`, `warn`, `error`). |
+### 3. ⚙️ Tab: Mixnet Krypto & Feintuning
+* **1-Klick Presets**:
+  * *⚡ Eco Mode*: 0 Cover-Traffic, minimale Latenz (~250–350 ms).
+  * *🛡️ High Privacy (Standard)*: 10 Pkt/min Cover-Rauschen, SURBs aktiv, Anti-Timing-Schutz.
+  * *🕵️ Ultra Stealth*: 35 Pkt/min Cover-Rauschen gegen Nachbarschafts- und Router-Sniffer.
+* **Poisson-Verzögerung pro Hop (5–150 ms)**: Stochastische Paketstreuung zur Zerstörung von Timing-Mustern.
+* **SURB Token Puffer (20, 50, 100, 250 Tokens)**: Vorrat an anonymen Rückkanälen für parallele Sensoren.
+* **DNS-over-Mixnet Isolation**: DNS-Abfragen werden erst am Exit-Node aufgelöst.
+* **Weltweite Exit-Nodes**: Auswahl zwischen 🇨🇭 Schweiz, 🇩🇪 Deutschland, 🇮🇸 Island, 🇫🇮 Finnland, 🇳🇱 Niederlande, 🇸🇬 Singapur, 🇺🇸 USA oder benutzerdefinierter Adresse.
 
 ---
 
-## 🛠️ Home Assistant Services (Automatisierungen)
+### 4. 💎 Tab: Nym Premium, Fast Pass & ZK-Bandwidth Tokens
+Das Nym Mixnet ist im Standard-Modus **vollkommen kostenlos und dezentral nutzbar**. Für anspruchsvolle Smart Homes bietet Nym optionale **Premium Fast-Pass / Coconut zk-nyms** Funktionen:
 
-* **`nym_privacy_hub.test_connection`**: Führt einen sofortigen Verbindungstest durch und aktualisiert alle Sensoren.
-* **`nym_privacy_hub.send_anonymous_request`**: Führt eine HTTP GET/POST Anfrage direkt über das Nym Mixnet aus und liefert die Antwort zurück:
-```yaml
-service: nym_privacy_hub.send_anonymous_request
-data:
-  url: "https://api.ipify.org?format=json"
-  method: "GET"
-```
+#### 🌟 Vorteile eines kostenpflichtigen Nym-Zugangs:
+1. 🚀 **Garantierte High-Speed Bandbreite (bis 100+ Mbit/s)**:
+   * Ermöglicht das unterbrechungsfreie Streaming verschlüsselter Sicherheitskameras und rasante Offsite-Backups (z. B. vollständige HA Snapshots nach Nextcloud/Drive).
+2. ⚡ **VIP Low-Latency Mix Queues (<200–300 ms)**:
+   * Priorisierte Weiterleitung in Mixnodes. Verhindert Paketverwerfungen bei weltweiter Netzwerkauslastung.
+3. 🔐 **Statische NymID für P2P Remote-Access**:
+   * Feste kryptografische Nym-Adresse für portfreigabe-freien Fernzugriff von unterwegs (Home Assistant Companion App über Mixnet ohne Cloud-Abo).
+4. 🎫 **Zero-Knowledge Coconut Credentials (zk-nyms)**:
+   * Der Zahlungsnachweis erfolgt kryptografisch über blinde Signaturen. Nym erfährt niemals, welches Home Assistant System zu welcher Zahlung gehört!
+5. 🔐 **Passphrase- & Mnemonic-Seed Schutz**:
+   * Sichere Absicherung der lokalen kryptografischen Schlüsselpaare oder Wiederherstellung bestehender Nym-Identitäten.
 
 ---
 
-## ❓ Häufige Fragen (FAQ)
+### 5. 📋 Tab: YAML Vorlagen & Integration Snippets
+Fertige Kopiervorlagen für die `configuration.yaml` zur sofortigen Einbindung von Telegram-Bots, Wetter-Sensoren, IP-Checkern und Shell-Commands.
 
-**F: Verlangsamt das Nym Mixnet mein Smart Home?**  
-A: Lokale Steuerungen (wie Zigbee, Z-Wave, lokale Lampen) bleiben blitzschnell und unverändert lokal im Netzwerk. Nur externe Internetabfragen (Wetter, Cloud-KI, Benachrichtigungen) werden verschlüsselt gemischt (typische Latenz ca. 300–500 ms).
+---
 
-**F: Bleiben meine Schlüssel bei Neustarts erhalten?**  
-A: Ja! Sämtliche kryptografischen Schlüsselpaare und Konfigurationen werden dauerhaft im persistenten Home Assistant Speicher unter `/data/.nym` gesichert.
+## 📖 Schnellstart (1-Klick)
+
+1. Im Home Assistant Add-on Store den **Nym Privacy Hub** installieren und starten.
+2. In der linken Seitenleiste auf **Nym Privacy** klicken.
+3. Im Tab **🛡️ HA Datenquellen** deine gewünschten Schutzschilde aktivieren – fertig!

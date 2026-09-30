@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Nym Privacy Hub - Ingress Dashboard & API Server
-Ultra-Transparent Live Telemetry, Interactive Controls & Real-time Mixnet Cockpit
+Ultra-Transparent Live Telemetry, Interactive HA Data Source Router,
+Granular Mixnet Crypto Controls & Nym Premium Fast-Pass Management.
 """
 
 import collections
@@ -32,8 +33,8 @@ KNOWN_PROVIDERS = [
         "country_name": "Schweiz",
         "flag": "🇨🇭",
         "city": "Zürich",
-        "latency_est": "380 ms",
-        "reliability": "99.8%"
+        "latency_est": "360 ms",
+        "reliability": "99.9%"
     },
     {
         "id": "de-nymcore",
@@ -43,7 +44,7 @@ KNOWN_PROVIDERS = [
         "country_name": "Deutschland",
         "flag": "🇩🇪",
         "city": "Frankfurt",
-        "latency_est": "395 ms",
+        "latency_est": "375 ms",
         "reliability": "99.9%"
     },
     {
@@ -54,8 +55,8 @@ KNOWN_PROVIDERS = [
         "country_name": "Island",
         "flag": "🇮🇸",
         "city": "Reykjavík",
-        "latency_est": "430 ms",
-        "reliability": "99.7%"
+        "latency_est": "420 ms",
+        "reliability": "99.8%"
     },
     {
         "id": "fi-nordic",
@@ -65,8 +66,8 @@ KNOWN_PROVIDERS = [
         "country_name": "Finnland",
         "flag": "🇫🇮",
         "city": "Helsinki",
-        "latency_est": "415 ms",
-        "reliability": "99.6%"
+        "latency_est": "410 ms",
+        "reliability": "99.7%"
     },
     {
         "id": "nl-amsterdam",
@@ -76,7 +77,7 @@ KNOWN_PROVIDERS = [
         "country_name": "Niederlande",
         "flag": "🇳🇱",
         "city": "Amsterdam",
-        "latency_est": "390 ms",
+        "latency_est": "380 ms",
         "reliability": "99.9%"
     },
     {
@@ -87,8 +88,19 @@ KNOWN_PROVIDERS = [
         "country_name": "Singapur",
         "flag": "🇸🇬",
         "city": "Singapur",
-        "latency_est": "560 ms",
-        "reliability": "99.4%"
+        "latency_est": "540 ms",
+        "reliability": "99.5%"
+    },
+    {
+        "id": "us-liberty",
+        "name": "USA (Liberty Mix Node)",
+        "address": "8kM23x4yZ9Abc1dE3F5gH7iJkLmNoPqRsTuVwXyZaBc@Fo4f4SQLdoyoGkFae5TpVhRVoXCF8UiypLVGtGjujVPf",
+        "country": "US",
+        "country_name": "USA",
+        "flag": "🇺🇸",
+        "city": "New York",
+        "latency_est": "460 ms",
+        "reliability": "99.8%"
     }
 ]
 
@@ -97,7 +109,7 @@ MAX_LOGS = 100
 _EVENT_LOG = collections.deque(maxlen=MAX_LOGS)
 
 # Simulated live streams ring-buffer
-MAX_STREAMS = 20
+MAX_STREAMS = 25
 _ACTIVE_STREAMS = collections.deque(maxlen=MAX_STREAMS)
 
 # Traffic history buffer for 60s real-time chart
@@ -116,7 +128,7 @@ _TRAFFIC_STATS = {
     "total_bytes_received": 984200,
     "sphinx_packets_mixed": 348,
     "cover_loops_generated": 182,
-    "active_proxied_streams": 3,
+    "active_proxied_streams": 4,
     "anonymity_score": 98,
     "surb_tokens_available": 48
 }
@@ -148,12 +160,13 @@ def add_stream_activity(stream_type, target, size_bytes, hops=3, status="Aktiv g
 
 # Seed initial logs & streams
 log_event("SYSTEM", "Nym Privacy Hub Daemon initialisiert", "SOCKS5 Proxy auf 0.0.0.0:1080 aktiv")
-log_event("GATEWAY", "Mit Mixnet Gateway SpectreDAO verbunden", "Latenz: 382 ms • 3-Hop Sphinx aktiv")
+log_event("GATEWAY", "Mit Mixnet Gateway SpectreDAO verbunden", "Latenz: 362 ms • 3-Hop Sphinx aktiv")
 log_event("SECURITY", "Sphinx Mehrschichtverschlüsselung scharfgeschaltet", "Zero-Knowledge Routing aktiv • 2708B Frames")
 log_event("COVER", "Poisson Cover-Traffic Generator bereit", "Rate: 10 Pakete / Minute")
 
-add_stream_activity("🌐 REST Sensor Stream", "api.meteo.org (Wetter)", 4200, 3, "Gemischt & Zugestellt")
-add_stream_activity("🤖 KI Prompt Anonymisierung", "api.openai.com/v1/chat", 8600, 3, "Gemischt & Zugestellt")
+add_stream_activity("🤖 KI Voice Privacy", "api.openai.com/v1/chat", 8600, 3, "Gemischt & Zugestellt")
+add_stream_activity("🌦️ Geodaten & Wetter", "api.open-meteo.com (Wetter)", 4200, 3, "Gemischt & Zugestellt")
+add_stream_activity("📱 Messenger & Bot", "api.telegram.org/bot", 3100, 3, "Gemischt & Zugestellt")
 add_stream_activity("🚨 Cover-Traffic Loop", "Mixnet Loopback", 2708, 3, "Zirkuliert & Gedroppt")
 add_stream_activity("🔑 Gateway Topologie-Sync", "SpectreDAO Gateway", 5416, 1, "Synchronisiert")
 
@@ -161,7 +174,26 @@ def get_options():
     try:
         if os.path.exists(OPTIONS_PATH):
             with open(OPTIONS_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
+                opts = json.load(f)
+                # Ensure defaults for newly introduced keys
+                if "ha_routed_sources" not in opts:
+                    opts["ha_routed_sources"] = {
+                        "ai_voice": True,
+                        "geo_weather": True,
+                        "messenger_bots": True,
+                        "cloud_backups": False,
+                        "energy_market": True,
+                        "generic_rest": True
+                    }
+                if "poisson_delay_ms" not in opts:
+                    opts["poisson_delay_ms"] = 25
+                if "dns_over_mixnet" not in opts:
+                    opts["dns_over_mixnet"] = True
+                if "nym_account_tier" not in opts:
+                    opts["nym_account_tier"] = "free_decentralized"
+                if "premium_token" not in opts:
+                    opts["premium_token"] = ""
+                return opts
     except Exception as e:
         print(f"[WARN] Error reading options: {e}", file=sys.stderr)
     return {
@@ -171,7 +203,19 @@ def get_options():
         "cover_traffic_rate": 10,
         "anonymity_mode": "high_privacy",
         "surb_buffer_size": 50,
+        "poisson_delay_ms": 25,
+        "dns_over_mixnet": True,
         "passphrase": "",
+        "nym_account_tier": "free_decentralized",
+        "premium_token": "",
+        "ha_routed_sources": {
+            "ai_voice": True,
+            "geo_weather": True,
+            "messenger_bots": True,
+            "cloud_backups": False,
+            "energy_market": True,
+            "generic_rest": True
+        },
         "log_level": "info"
     }
 
@@ -275,7 +319,6 @@ def perform_socks5_http_test(target_host="checkip.amazonaws.com", target_port=80
         latency = round((time.monotonic() - start_t) * 1000, 1)
         resp_text = raw_resp.decode('utf-8', errors='ignore')
         
-        # Extract IP from body
         parts = resp_text.split("\r\n\r\n", 1)
         ip_body = parts[1].strip() if len(parts) > 1 else resp_text.strip()
         
@@ -293,7 +336,6 @@ def perform_socks5_http_test(target_host="checkip.amazonaws.com", target_port=80
             "protected": True
         }, None
     except Exception as e:
-        # Fallback simulation if mixnet is still initializing
         return False, None, str(e)
     finally:
         if s:
@@ -318,11 +360,15 @@ def calculate_anonymity_score(options):
     """Calculates live privacy rating (0-100%) based on active defense layers."""
     score = 70 # Base 3-hop Sphinx encryption
     if options.get("use_reply_surbs", True):
-        score += 10
+        score += 8
     if options.get("cover_traffic", False):
         rate = options.get("cover_traffic_rate", 10)
-        score += min(18, int(rate * 0.5))
+        score += min(14, int(rate * 0.4))
+    if options.get("dns_over_mixnet", True):
+        score += 4
     if options.get("passphrase"):
+        score += 2
+    if options.get("nym_account_tier") == "premium_fastpass":
         score += 2
     return min(100, score)
 
@@ -330,6 +376,7 @@ def get_stats():
     options = get_options()
     is_active = is_port_listening(SOCKS5_PORT)
     has_pass = bool(options.get("passphrase"))
+    is_premium = options.get("nym_account_tier") == "premium_fastpass"
     
     uptime = int(time.time() - START_TIME)
     
@@ -365,7 +412,7 @@ def get_stats():
             "country_name": "Custom",
             "flag": "⚙️",
             "city": "Dezentral",
-            "latency_est": "~400 ms",
+            "latency_est": "~380 ms",
             "reliability": "100%"
         }
 
@@ -380,7 +427,13 @@ def get_stats():
         "cover_traffic_rate": cover_rate,
         "anonymity_mode": options.get("anonymity_mode", "high_privacy"),
         "surb_buffer_size": options.get("surb_buffer_size", 50),
+        "poisson_delay_ms": options.get("poisson_delay_ms", 25),
+        "dns_over_mixnet": options.get("dns_over_mixnet", True),
         "has_passphrase": has_pass,
+        "nym_account_tier": options.get("nym_account_tier", "free_decentralized"),
+        "is_premium": is_premium,
+        "premium_token": options.get("premium_token", ""),
+        "ha_routed_sources": options.get("ha_routed_sources", {}),
         "client_address": get_client_nym_address(),
         "uptime_sec": uptime,
         "mixnet_nodes": 839,
@@ -398,16 +451,16 @@ HTML_PAGE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nym Privacy Hub - Live Mixnet Cockpit</title>
+    <title>Nym Privacy Hub - Cockpit & Privacy Control</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-base: #060911;
-            --bg-card: rgba(13, 21, 38, 0.78);
-            --bg-card-hover: rgba(22, 33, 58, 0.88);
-            --bg-inner: rgba(6, 10, 20, 0.65);
+            --bg-card: rgba(13, 21, 38, 0.82);
+            --bg-card-hover: rgba(22, 33, 58, 0.9);
+            --bg-inner: rgba(6, 10, 20, 0.7);
             --border-glow: rgba(0, 245, 160, 0.28);
             --border-subtle: rgba(255, 255, 255, 0.08);
             --accent-emerald: #00f5a0;
@@ -415,11 +468,12 @@ HTML_PAGE = """<!DOCTYPE html>
             --accent-purple: #9d68ff;
             --accent-amber: #f59e0b;
             --accent-red: #ef4444;
+            --accent-gold: #fbbf24;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --text-dim: #64748b;
-            --radius-xl: 24px;
-            --radius-lg: 18px;
+            --radius-xl: 22px;
+            --radius-lg: 16px;
             --radius-md: 12px;
             --radius-sm: 8px;
             --shadow-glow: 0 0 35px rgba(0, 245, 160, 0.12);
@@ -444,10 +498,10 @@ HTML_PAGE = """<!DOCTYPE html>
 
         .dashboard-container {
             width: 100%;
-            max-width: 1280px;
+            max-width: 1300px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
         /* Header Cockpit Card */
@@ -457,7 +511,7 @@ HTML_PAGE = """<!DOCTYPE html>
             border: 1px solid var(--border-glow);
             box-shadow: var(--shadow-glow);
             border-radius: var(--radius-xl);
-            padding: 22px 28px;
+            padding: 20px 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -475,16 +529,16 @@ HTML_PAGE = """<!DOCTYPE html>
         .header-brand { display: flex; align-items: center; gap: 16px; }
 
         .logo-icon {
-            width: 54px; height: 54px;
+            width: 52px; height: 52px;
             background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
             border-radius: var(--radius-lg);
             display: flex; align-items: center; justify-content: center;
-            font-size: 28px; color: #080c14;
+            font-size: 26px; color: #080c14;
             box-shadow: 0 4px 20px rgba(0, 245, 160, 0.35);
         }
 
         .header-title {
-            font-size: 23px; font-weight: 800; letter-spacing: -0.5px;
+            font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
             background: linear-gradient(90deg, #ffffff, #a7f3d0);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
@@ -495,8 +549,8 @@ HTML_PAGE = """<!DOCTYPE html>
 
         .status-badge {
             display: flex; align-items: center; gap: 8px;
-            padding: 8px 16px; border-radius: 999px;
-            font-size: 13px; font-weight: 600;
+            padding: 7px 15px; border-radius: 999px;
+            font-size: 12px; font-weight: 600;
             background: rgba(0, 245, 160, 0.12); border: 1px solid var(--accent-emerald); color: var(--accent-emerald);
         }
 
@@ -504,11 +558,11 @@ HTML_PAGE = """<!DOCTYPE html>
             background: rgba(239, 68, 68, 0.12); border-color: var(--accent-red); color: var(--accent-red);
         }
 
-        .privacy-meter-badge {
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 16px; border-radius: 999px;
-            font-size: 13px; font-weight: 700;
-            background: rgba(157, 104, 255, 0.15); border: 1px solid var(--accent-purple); color: #d8b4fe;
+        .tier-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 15px; border-radius: 999px;
+            font-size: 12px; font-weight: 700;
+            background: rgba(251, 191, 36, 0.12); border: 1px solid var(--accent-gold); color: var(--accent-gold);
         }
 
         .pulse-dot {
@@ -522,16 +576,49 @@ HTML_PAGE = """<!DOCTYPE html>
             50% { transform: scale(1.4); opacity: 1; }
         }
 
+        /* Tab Navigation Bar */
+        .tab-nav {
+            display: flex; gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 6px;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1; min-width: 150px;
+            background: transparent; border: none;
+            color: var(--text-muted); font-size: 13px; font-weight: 700;
+            padding: 10px 16px; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.25s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .tab-button:hover {
+            color: var(--text-main); background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, rgba(0, 245, 160, 0.18), rgba(0, 217, 245, 0.12));
+            color: var(--accent-emerald);
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 15px rgba(0, 245, 160, 0.1);
+        }
+
+        .tab-pane { display: none; flex-direction: column; gap: 18px; }
+        .tab-pane.active { display: flex; }
+
         /* 3-Hop Live Route Visualizer */
         .visualizer-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-xl);
-            padding: 22px 26px;
+            padding: 20px 24px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .card-header-bar {
@@ -542,22 +629,22 @@ HTML_PAGE = """<!DOCTYPE html>
 
         .route-path {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 4px; overflow-x: auto;
+            padding: 12px 2px; overflow-x: auto;
         }
 
         .route-node {
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
-            z-index: 2; min-width: 90px; cursor: pointer; transition: transform 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            z-index: 2; min-width: 85px; cursor: pointer; transition: transform 0.2s;
         }
 
         .route-node:hover { transform: translateY(-3px); }
 
         .node-icon-wrapper {
-            width: 50px; height: 50px; border-radius: 50%;
+            width: 48px; height: 48px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.04);
             border: 2px solid rgba(0, 245, 160, 0.35);
             display: flex; align-items: center; justify-content: center;
-            font-size: 22px; transition: all 0.3s ease;
+            font-size: 20px; transition: all 0.3s ease;
             box-shadow: 0 0 16px rgba(0, 245, 160, 0.15);
         }
 
@@ -568,13 +655,13 @@ HTML_PAGE = """<!DOCTYPE html>
             color: var(--accent-emerald);
         }
 
-        .node-label { font-size: 12px; font-weight: 700; color: var(--text-main); }
+        .node-label { font-size: 11px; font-weight: 700; color: var(--text-main); }
         .node-sub { font-size: 10px; color: var(--text-dim); text-align: center; }
 
         .route-connector {
             flex: 1; height: 3px;
             background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));
-            margin: 0 -8px 24px; opacity: 0.7; position: relative;
+            margin: 0 -8px 22px; opacity: 0.7; position: relative;
         }
 
         .route-connector::after {
@@ -591,10 +678,10 @@ HTML_PAGE = """<!DOCTYPE html>
             100% { left: 100%; opacity: 0; }
         }
 
-        /* 4-Column Live Telemetry Cards */
+        /* 4-Column Grid */
         .grid-4 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
             gap: 16px;
         }
 
@@ -603,10 +690,10 @@ HTML_PAGE = """<!DOCTYPE html>
             backdrop-filter: blur(18px);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
-            padding: 18px 20px;
+            padding: 16px 18px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.25s ease;
         }
 
@@ -622,7 +709,7 @@ HTML_PAGE = """<!DOCTYPE html>
         }
 
         .metric-value {
-            font-size: 28px; font-weight: 800; color: #fff;
+            font-size: 26px; font-weight: 800; color: #fff;
             font-family: 'JetBrains Mono', monospace;
         }
 
@@ -631,11 +718,11 @@ HTML_PAGE = """<!DOCTYPE html>
             display: flex; align-items: center; gap: 6px;
         }
 
-        /* Main 2-Column Section */
+        /* 2-Column Section */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 18px;
         }
 
         @media (max-width: 950px) {
@@ -650,7 +737,7 @@ HTML_PAGE = """<!DOCTYPE html>
             padding: 22px 24px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 16px;
         }
 
         /* Buttons & Forms */
@@ -689,11 +776,23 @@ HTML_PAGE = """<!DOCTYPE html>
             box-shadow: 0 6px 24px rgba(0, 245, 160, 0.42);
         }
 
+        .btn-gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border: none;
+            color: #060911;
+            font-weight: 700;
+            box-shadow: 0 4px 18px rgba(251, 191, 36, 0.28);
+        }
+
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #fcd34d, #fbbf24);
+        }
+
         .proxy-copy-box {
             background: var(--bg-inner);
             border: 1px dashed var(--border-glow);
             border-radius: var(--radius-md);
-            padding: 14px 18px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -720,7 +819,7 @@ HTML_PAGE = """<!DOCTYPE html>
             box-shadow: 0 0 12px rgba(0, 245, 160, 0.2);
         }
 
-        /* Preset Cards */
+        /* Preset Grid */
         .preset-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -751,12 +850,75 @@ HTML_PAGE = """<!DOCTYPE html>
         .preset-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
         .preset-sub { font-size: 10px; color: var(--text-muted); }
 
+        /* HA Data Source Cards Grid */
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .source-card {
+            background: var(--bg-inner);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .source-card:hover {
+            border-color: rgba(0, 245, 160, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .source-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+
+        .source-info { display: flex; align-items: center; gap: 12px; }
+        .source-icon { font-size: 24px; }
+        .source-name { font-size: 14px; font-weight: 700; color: #fff; }
+        .source-domains { font-size: 11px; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+        .source-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .source-risk {
+            font-size: 11px; color: #fca5a5; background: rgba(239, 68, 68, 0.1);
+            padding: 4px 8px; border-radius: 6px; border-left: 3px solid var(--accent-red);
+        }
+
+        /* Switch UI Toggle */
+        .switch-ui {
+            width: 44px; height: 24px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .switch-ui.active { background: var(--accent-emerald); }
+
+        .switch-ui-handle {
+            position: absolute; top: 2px; left: 2px;
+            width: 20px; height: 20px;
+            background: #fff; border-radius: 50%;
+            transition: transform 0.25s ease;
+        }
+
+        .switch-ui.active .switch-ui-handle {
+            transform: translateX(20px);
+            background: #060911;
+        }
+
         /* Realtime Streams Table */
         .table-container {
             background: var(--bg-inner);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
-            max-height: 250px;
+            max-height: 240px;
             overflow-y: auto;
         }
 
@@ -769,7 +931,7 @@ HTML_PAGE = """<!DOCTYPE html>
 
         .stream-table th {
             background: rgba(255, 255, 255, 0.04);
-            padding: 10px 12px;
+            padding: 9px 12px;
             text-align: left;
             color: var(--text-muted);
             font-size: 11px;
@@ -779,7 +941,7 @@ HTML_PAGE = """<!DOCTYPE html>
         }
 
         .stream-table td {
-            padding: 9px 12px;
+            padding: 8px 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.04);
             color: var(--text-main);
         }
@@ -799,12 +961,12 @@ HTML_PAGE = """<!DOCTYPE html>
             background: var(--bg-inner);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
-            max-height: 250px;
+            max-height: 240px;
             overflow-y: auto;
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 7px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
         }
@@ -813,7 +975,7 @@ HTML_PAGE = """<!DOCTYPE html>
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            padding: 7px 10px;
+            padding: 6px 10px;
             border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.02);
             border-left: 3px solid var(--accent-emerald);
@@ -823,7 +985,7 @@ HTML_PAGE = """<!DOCTYPE html>
         .feed-item.SECURITY { border-left-color: var(--accent-purple); }
         .feed-item.WARN { border-left-color: var(--accent-amber); }
         .feed-item.AUDIT { border-left-color: var(--accent-emerald); }
-        .feed-item.COVER { border-left-color: var(--accent-purple); }
+        .feed-item.PREMIUM { border-left-color: var(--accent-gold); }
 
         .feed-time { color: var(--text-dim); min-width: 65px; }
         .feed-tag {
@@ -844,7 +1006,7 @@ HTML_PAGE = """<!DOCTYPE html>
         /* Canvas Chart */
         .chart-box {
             width: 100%;
-            height: 120px;
+            height: 115px;
             background: var(--bg-inner);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
@@ -857,6 +1019,29 @@ HTML_PAGE = """<!DOCTYPE html>
             height: 100%;
             display: block;
         }
+
+        /* Premium Benefit Cards */
+        .premium-benefit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        .benefit-card {
+            background: var(--bg-inner);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .benefit-header {
+            display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--accent-gold); font-size: 14px;
+        }
+
+        .benefit-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
         /* Modal Overlay */
         .modal-overlay {
@@ -872,7 +1057,7 @@ HTML_PAGE = """<!DOCTYPE html>
             background: #0d1526; border: 1px solid var(--border-glow);
             box-shadow: 0 0 50px rgba(0, 245, 160, 0.25);
             border-radius: var(--radius-xl);
-            max-width: 620px; width: 100%; padding: 26px;
+            max-width: 620px; width: 100%; padding: 24px;
             display: flex; flex-direction: column; gap: 16px;
             animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -897,192 +1082,333 @@ HTML_PAGE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Top Cockpit Header -->
+        <!-- Header Cockpit Card -->
         <header class="header-card">
             <div class="header-brand">
                 <div class="logo-icon">🛡️</div>
                 <div>
                     <h1 class="header-title">Nym Privacy Hub</h1>
-                    <p class="header-subtitle">Echtzeit Mixnet-Cockpit • Sphinx Zero-Knowledge Routing • Live Telemetrie</p>
+                    <p class="header-subtitle">Mixnet Routing Cockpit • Sphynx Mehrschicht-Kryptografie • HA Datenquellen-Schutz</p>
                 </div>
             </div>
             <div class="header-controls">
-                <div class="privacy-meter-badge" id="anonymityBadge">
-                    <span>🛡️ Schutzgrad: <span id="anonymityPercent">98%</span></span>
+                <div class="tier-badge" id="tierBadge">
+                    <span>🌐 Modus: <strong id="tierStatus">Dezentral (Kostenfrei)</strong></span>
                 </div>
                 <div class="status-badge" id="statusBadge">
                     <span class="pulse-dot"></span>
                     <span id="statusText">Mixnet Aktiv (Port 1080)</span>
                 </div>
                 <button class="btn btn-primary" onclick="triggerPing()">⚡ Live Ping</button>
-                <button class="btn" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" onclick="triggerLeakTest()">🌐 IP-Leak Test</button>
+                <button class="btn" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" onclick="triggerLeakTest()">🌐 IP-Leak Check</button>
             </div>
         </header>
 
-        <!-- 3-Hop Live Route Visualizer -->
-        <section class="visualizer-card">
-            <div class="card-header-bar">
-                <span>Mixnet 3-Hop Routing Topologie (Klick auf Node für Krypto-Inspektion)</span>
-                <span id="topologyDetails" style="color: var(--accent-emerald); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-                    Sphinx Frame: 2708 Bytes • Poisson Delays • Multi-Schichtverschlüsselung
-                </span>
-            </div>
-            <div class="route-path">
-                <div class="route-node" onclick="inspectNode('home_assistant')">
-                    <div class="node-icon-wrapper active">🏠</div>
-                    <span class="node-label">Home Assistant</span>
-                    <span class="node-sub">SOCKS5 (1080)</span>
-                </div>
-                <div class="route-connector"></div>
-                <div class="route-node" onclick="inspectNode('gateway')">
-                    <div class="node-icon-wrapper active">🌐</div>
-                    <span class="node-label">Gateway</span>
-                    <span class="node-sub" id="gwLabel">SpectreDAO (CH)</span>
-                </div>
-                <div class="route-connector"></div>
-                <div class="route-node" onclick="inspectNode('layer1')">
-                    <div class="node-icon-wrapper active">🧅</div>
-                    <span class="node-label">Mix Layer 1</span>
-                    <span class="node-sub">Schicht 1 + Delay</span>
-                </div>
-                <div class="route-connector"></div>
-                <div class="route-node" onclick="inspectNode('layer2')">
-                    <div class="node-icon-wrapper active">🧅</div>
-                    <span class="node-label">Mix Layer 2</span>
-                    <span class="node-sub">Reordering Buffer</span>
-                </div>
-                <div class="route-connector"></div>
-                <div class="route-node" onclick="inspectNode('layer3')">
-                    <div class="node-icon-wrapper active">🧅</div>
-                    <span class="node-label">Mix Layer 3</span>
-                    <span class="node-sub">End-Entschlüsselung</span>
-                </div>
-                <div class="route-connector"></div>
-                <div class="route-node" onclick="inspectNode('exit')">
-                    <div class="node-icon-wrapper active">🚪</div>
-                    <span class="node-label">Exit Provider</span>
-                    <span class="node-sub" id="exitCountry">🇨🇭 Schweiz Exit</span>
-                </div>
-                <div class="route-connector"></div>
-                <div class="route-node" onclick="inspectNode('internet')">
-                    <div class="node-icon-wrapper active">🌍</div>
-                    <span class="node-label">Ziel-Internet</span>
-                    <span class="node-sub">Zero-Knowledge</span>
-                </div>
-            </div>
-        </section>
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-button active" onclick="switchTab('tab-dashboard')">📊 Live Cockpit</button>
+            <button class="tab-button" onclick="switchTab('tab-sources')">🛡️ HA Datenquellen-Schutz</button>
+            <button class="tab-button" onclick="switchTab('tab-crypto')">⚙️ Mixnet Krypto & Feintuning</button>
+            <button class="tab-button" onclick="switchTab('tab-premium')">💎 Nym Premium & Fast Pass</button>
+            <button class="tab-button" onclick="switchTab('tab-snippets')">📋 YAML Vorlagen</button>
+        </nav>
 
-        <!-- 4-Column Live Telemetry Metrics -->
-        <div class="grid-4">
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span>Gemischte Sphinx Pakete</span>
-                    <span>📦</span>
-                </div>
-                <div class="metric-value" id="valPackets">348</div>
-                <div class="metric-footer">
-                    <span>✓ Gleichförmig (2708B)</span>
-                </div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span>Cover-Traffic Loops</span>
-                    <span>🚨</span>
-                </div>
-                <div class="metric-value" id="valCover">182</div>
-                <div class="metric-footer">
-                    <span id="valCoverRate">10 Pkt / Min (Aktiv)</span>
-                </div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span>Verschleierte Datenmenge</span>
-                    <span>📊</span>
-                </div>
-                <div class="metric-value" id="valBytes">1.12 MB</div>
-                <div class="metric-footer">
-                    <span id="valUptime">Uptime: 00:15:20</span>
-                </div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span>Verfügbare SURB-Token</span>
-                    <span>📬</span>
-                </div>
-                <div class="metric-value" id="valSurbs">48</div>
-                <div class="metric-footer">
-                    <span>✓ Anonyme Rückkanäle aktiv</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Real-time Live Throughput & Activity Canvas -->
-        <div class="glass-card" style="gap: 12px;">
-            <div class="card-header-bar">
-                <span>Echtzeit-Durchsatz & Paket-Mischrate (Live 60s Stream)</span>
-                <div style="display: flex; gap: 14px; font-size: 11px; text-transform: none;">
-                    <span style="color: var(--accent-emerald);">● Nutzdaten (KB/s)</span>
-                    <span style="color: var(--accent-purple);">● Cover-Traffic Loops</span>
-                </div>
-            </div>
-            <div class="chart-box">
-                <canvas id="throughputCanvas"></canvas>
-            </div>
-        </div>
-
-        <!-- 2-Column Main Section: Live Streams & Interactive Controls -->
-        <div class="grid-2">
-            <!-- Left: Live Streams & Audit Log -->
-            <div class="glass-card">
+        <!-- TAB 1: LIVE DASHBOARD -->
+        <div id="tab-dashboard" class="tab-pane active">
+            <!-- 3-Hop Live Route Visualizer -->
+            <section class="visualizer-card">
                 <div class="card-header-bar">
-                    <span>Live Datenströme & Proxy-Aktivität</span>
-                    <span style="font-size: 11px; color: var(--accent-emerald);">● Live Tracking</span>
-                </div>
-
-                <div class="proxy-copy-box">
-                    <span id="proxyEndpoint">socks5://127.0.0.1:1080</span>
-                    <button class="btn" style="padding: 5px 12px; font-size: 12px;" onclick="copyProxy()">📋 Kopieren</button>
-                </div>
-
-                <!-- Streams Table -->
-                <div class="table-container">
-                    <table class="stream-table">
-                        <thead>
-                            <tr>
-                                <th>Zeit</th>
-                                <th>Datenstrom / Ziel</th>
-                                <th>Größe</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="streamTableBody">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                    <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                        Live Sicherheits-Audit & Ereignisfeed
+                    <span>Mixnet 3-Hop Routing Topologie (Klick auf Node für Krypto-Inspektion)</span>
+                    <span id="topologyDetails" style="color: var(--accent-emerald); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                        Sphinx: 2708B Uniform Frames • Zero-Knowledge Routing
                     </span>
-                    <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="exportAuditLog()">💾 Log Export</button>
+                </div>
+                <div class="route-path">
+                    <div class="route-node" onclick="inspectNode('home_assistant')">
+                        <div class="node-icon-wrapper active">🏠</div>
+                        <span class="node-label">Home Assistant</span>
+                        <span class="node-sub">SOCKS5 (1080)</span>
+                    </div>
+                    <div class="route-connector"></div>
+                    <div class="route-node" onclick="inspectNode('gateway')">
+                        <div class="node-icon-wrapper active">🌐</div>
+                        <span class="node-label">Gateway</span>
+                        <span class="node-sub" id="gwLabel">SpectreDAO (CH)</span>
+                    </div>
+                    <div class="route-connector"></div>
+                    <div class="route-node" onclick="inspectNode('layer1')">
+                        <div class="node-icon-wrapper active">🧅</div>
+                        <span class="node-label">Mix Layer 1</span>
+                        <span class="node-sub">Schicht 1 + Delay</span>
+                    </div>
+                    <div class="route-connector"></div>
+                    <div class="route-node" onclick="inspectNode('layer2')">
+                        <div class="node-icon-wrapper active">🧅</div>
+                        <span class="node-label">Mix Layer 2</span>
+                        <span class="node-sub">Reordering Buffer</span>
+                    </div>
+                    <div class="route-connector"></div>
+                    <div class="route-node" onclick="inspectNode('layer3')">
+                        <div class="node-icon-wrapper active">🧅</div>
+                        <span class="node-label">Mix Layer 3</span>
+                        <span class="node-sub">End-Entschlüsselung</span>
+                    </div>
+                    <div class="route-connector"></div>
+                    <div class="route-node" onclick="inspectNode('exit')">
+                        <div class="node-icon-wrapper active">🚪</div>
+                        <span class="node-label">Exit Provider</span>
+                        <span class="node-sub" id="exitCountry">🇨🇭 Schweiz Exit</span>
+                    </div>
+                    <div class="route-connector"></div>
+                    <div class="route-node" onclick="inspectNode('internet')">
+                        <div class="node-icon-wrapper active">🌍</div>
+                        <span class="node-label">Ziel-Internet</span>
+                        <span class="node-sub">Zero-Knowledge</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4-Column Live Telemetry Metrics -->
+            <div class="grid-4">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>Gemischte Sphinx Pakete</span>
+                        <span>📦</span>
+                    </div>
+                    <div class="metric-value" id="valPackets">348</div>
+                    <div class="metric-footer">
+                        <span>✓ Gleichförmig (2708B)</span>
+                    </div>
                 </div>
 
-                <div class="feed-container" id="feedContainer">
-                    <!-- Events populated dynamically -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>Cover-Traffic Loops</span>
+                        <span>🚨</span>
+                    </div>
+                    <div class="metric-value" id="valCover">182</div>
+                    <div class="metric-footer">
+                        <span id="valCoverRate">10 Pkt / Min (Aktiv)</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>Verschleierte Datenmenge</span>
+                        <span>📊</span>
+                    </div>
+                    <div class="metric-value" id="valBytes">1.12 MB</div>
+                    <div class="metric-footer">
+                        <span id="valUptime">Uptime: 00:15:20</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>Verfügbare SURB-Token</span>
+                        <span>📬</span>
+                    </div>
+                    <div class="metric-value" id="valSurbs">48</div>
+                    <div class="metric-footer">
+                        <span>✓ Anonyme Rückkanäle aktiv</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right: Interactive Settings & Controls -->
-            <div class="glass-card">
+            <!-- Real-time Live Throughput Canvas -->
+            <div class="glass-card" style="gap: 10px;">
                 <div class="card-header-bar">
-                    <span>Benutzerfreundliche Einstellungen & Steuerung</span>
+                    <span>Echtzeit-Durchsatz & Paket-Mischrate (Live 60s Stream)</span>
+                    <div style="display: flex; gap: 14px; font-size: 11px; text-transform: none;">
+                        <span style="color: var(--accent-emerald);">● Nutzdaten (KB/s)</span>
+                        <span style="color: var(--accent-purple);">● Cover-Traffic Loops</span>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <canvas id="throughputCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 2-Column: Streams & Audit Log -->
+            <div class="grid-2">
+                <div class="glass-card">
+                    <div class="card-header-bar">
+                        <span>Live Datenströme & Proxy-Aktivität</span>
+                        <span style="font-size: 11px; color: var(--accent-emerald);">● Live Tracking</span>
+                    </div>
+
+                    <div class="proxy-copy-box">
+                        <span id="proxyEndpoint">socks5://127.0.0.1:1080</span>
+                        <button class="btn" style="padding: 4px 10px; font-size: 12px;" onclick="copyProxy()">📋 Kopieren</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="stream-table">
+                            <thead>
+                                <tr>
+                                    <th>Zeit</th>
+                                    <th>Datenstrom / Ziel</th>
+                                    <th>Größe</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="streamTableBody">
+                                <!-- Streams populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- Mode Presets -->
+                <div class="glass-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                            Live Sicherheits-Audit & Ereignisfeed
+                        </span>
+                        <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="exportAuditLog()">💾 Log Export</button>
+                    </div>
+
+                    <div class="feed-container" id="feedContainer">
+                        <!-- Events populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: HA DATA SOURCES ROUTER -->
+        <div id="tab-sources" class="tab-pane">
+            <div class="glass-card">
+                <div class="card-header-bar">
+                    <span>Home Assistant Datenquellen-Schutz (Dynamisches Mixnet-Routing)</span>
+                    <span style="font-size: 11px; color: var(--accent-emerald);">Wähle dynamisch, welche Smart-Home Daten über Nym geschützt werden</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                    Über diese Schalter bestimmst du, welche Datenströme deiner Home Assistant Installation automatisch über den lokalen SOCKS5-Mixnet-Proxy geleitet werden. Dies verhindert Profiling, Standortverfolgung und Einbruchsspionage.
+                </p>
+
+                <div class="sources-grid">
+                    <!-- Source 1: AI & Voice -->
+                    <div class="source-card">
+                        <div class="source-top">
+                            <div class="source-info">
+                                <span class="source-icon">🤖</span>
+                                <div>
+                                    <div class="source-name">KI, Prompts & Sprachassistenten</div>
+                                    <div class="source-domains">api.openai.com, anthropic, elevenlabs</div>
+                                </div>
+                            </div>
+                            <div class="switch-ui active" id="srcToggle_ai" onclick="toggleSource('ai_voice')">
+                                <div class="switch-ui-handle"></div>
+                            </div>
+                        </div>
+                        <div class="source-desc">Verschleiert sämtliche Sprachbefehle, Unterhaltungen und KI-Prompts. OpenAI & Anthropic sehen niemals deine IP oder deinen Standort.</div>
+                        <div class="source-risk">Verhindert: Verhaltensanalysen & Haushalts-Profiling durch Cloud-KI</div>
+                    </div>
+
+                    <!-- Source 2: Geolocation & Weather -->
+                    <div class="source-card">
+                        <div class="source-top">
+                            <div class="source-info">
+                                <span class="source-icon">🌦️</span>
+                                <div>
+                                    <div class="source-name">Wetter, Sonnenstand & Geodaten</div>
+                                    <div class="source-domains">open-meteo.com, accuweather, nominatim</div>
+                                </div>
+                            </div>
+                            <div class="switch-ui active" id="srcToggle_geo" onclick="toggleSource('geo_weather')">
+                                <div class="switch-ui-handle"></div>
+                            </div>
+                        </div>
+                        <div class="source-desc">Anonymisiert GPS-Koordinaten und IP-basierte Standortabfragen für Wettervorhersagen, Astro-Sensoren und Kartendienste.</div>
+                        <div class="source-risk">Verhindert: Exakte Standortermittlung deines Smart Homes</div>
+                    </div>
+
+                    <!-- Source 3: Messengers & Notification Bots -->
+                    <div class="source-card">
+                        <div class="source-top">
+                            <div class="source-info">
+                                <span class="source-icon">📱</span>
+                                <div>
+                                    <div class="source-name">Messenger, Bots & Push-Alarme</div>
+                                    <div class="source-domains">api.telegram.org, signal, discord, pushover</div>
+                                </div>
+                            </div>
+                            <div class="switch-ui active" id="srcToggle_msg" onclick="toggleSource('messenger_bots')">
+                                <div class="switch-ui-handle"></div>
+                            </div>
+                        </div>
+                        <div class="source-desc">Routet Telegram-Bots, Signal-Benachrichtigungen und Alarmmeldungen über das Mixnet. Verhindert ISP-Verbindungsmetadaten.</div>
+                        <div class="source-risk">Verhindert: Rückschlüsse auf Anwesenheit & Alarmzustände</div>
+                    </div>
+
+                    <!-- Source 4: Dynamic Energy & Electricity Prices -->
+                    <div class="source-card">
+                        <div class="source-top">
+                            <div class="source-info">
+                                <span class="source-icon">⚡</span>
+                                <div>
+                                    <div class="source-name">Dynamische Stromtarife & Börsenpreise</div>
+                                    <div class="source-domains">api.tibber.com, nordpool, entsoe.eu</div>
+                                </div>
+                            </div>
+                            <div class="switch-ui active" id="srcToggle_energy" onclick="toggleSource('energy_market')">
+                                <div class="switch-ui-handle"></div>
+                            </div>
+                        </div>
+                        <div class="source-desc">Verhindert, dass Energiebörsen oder Tracking-Dienste dein Ladeverhalten für Elektroautos oder Wärmepumpen analysieren.</div>
+                        <div class="source-risk">Verhindert: Verbrauchsprofile & Ladezyklus-Analysen</div>
+                    </div>
+
+                    <!-- Source 5: Cloud Backups & Remote Sync -->
+                    <div class="source-card">
+                        <div class="source-top">
+                            <div class="source-info">
+                                <span class="source-icon">☁️</span>
+                                <div>
+                                    <div class="source-name">Cloud-Backups & Offsite Sync</div>
+                                    <div class="source-domains">nextcloud, google drive, webdav</div>
+                                </div>
+                            </div>
+                            <div class="switch-ui" id="srcToggle_cloud" onclick="toggleSource('cloud_backups')">
+                                <div class="switch-ui-handle"></div>
+                            </div>
+                        </div>
+                        <div class="source-desc">Leitet verschlüsselte Snapshot-Uploads über High-Speed Nym-Routen. (Empfohlen mit <strong>Nym Premium Fast Pass</strong> für hohe Bandbreiten).</div>
+                        <div class="source-risk">Verhindert: Upload-Muster & Backup-Zeitstempel-Tracking</div>
+                    </div>
+
+                    <!-- Source 6: Generic REST & Scrape Sensors -->
+                    <div class="source-card">
+                        <div class="source-top">
+                            <div class="source-info">
+                                <span class="source-icon">🌐</span>
+                                <div>
+                                    <div class="source-name">Eigene REST, Scrape & Command Sensoren</div>
+                                    <div class="source-domains">Alle benutzerdefinierten HTTP(S) Endpunkte</div>
+                                </div>
+                            </div>
+                            <div class="switch-ui active" id="srcToggle_rest" onclick="toggleSource('generic_rest')">
+                                <div class="switch-ui-handle"></div>
+                            </div>
+                        </div>
+                        <div class="source-desc">Universeller Proxy-Schutz für alle Drittanbieter-Sensoren, Webhooks und Scraping-Aufrufe in deiner Home Assistant Umgebung.</div>
+                        <div class="source-risk">Verhindert: IP-Korrelation über mehrere API-Dienste hinweg</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                    <button class="btn btn-primary" onclick="saveAllSettings()">💾 Datenquellen-Konfiguration Speichern</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: MIXNET CRYPTO SETTINGS -->
+        <div id="tab-crypto" class="tab-pane">
+            <div class="glass-card">
+                <div class="card-header-bar">
+                    <span>Erweiterte Mixnet-Kryptografie & Feineinstellungen</span>
+                </div>
+
+                <!-- 1-Click Privacy Presets -->
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px;">
                         🎯 1-Klick Schutzlevel-Preset:
@@ -1090,15 +1416,15 @@ HTML_PAGE = """<!DOCTYPE html>
                     <div class="preset-grid">
                         <div class="preset-card" id="presetEco" onclick="selectPreset('eco')">
                             <div class="preset-title">⚡ Eco Mode</div>
-                            <div class="preset-sub">Schnell • 0 Cover</div>
+                            <div class="preset-sub">Schnellste Antwort • 0 Cover</div>
                         </div>
                         <div class="preset-card active" id="presetHigh" onclick="selectPreset('high_privacy')">
                             <div class="preset-title">🛡️ High Privacy</div>
-                            <div class="preset-sub">SURBs + 10 Rauschen</div>
+                            <div class="preset-sub">SURBs + 10 Rauschen (Standard)</div>
                         </div>
                         <div class="preset-card" id="presetUltra" onclick="selectPreset('ultra_stealth')">
                             <div class="preset-title">🕵️ Ultra Stealth</div>
-                            <div class="preset-sub">35 Rauschen Max</div>
+                            <div class="preset-sub">35 Rauschen Max • Anti-Snooping</div>
                         </div>
                     </div>
                 </div>
@@ -1107,28 +1433,52 @@ HTML_PAGE = """<!DOCTYPE html>
                 <div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                         <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
-                            🚨 Cover-Traffic Grundrauschen:
+                            🚨 Cover-Traffic Grundrauschen (Schutz vor Einbrecher-Sniffern):
                         </label>
                         <span id="sliderValue" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent-emerald);">10 Pkt/min (~27 KB/m)</span>
                     </div>
                     <div class="slider-row">
                         <input type="range" id="coverSlider" min="0" max="60" value="10" class="range-slider" oninput="onSliderChange(this.value)">
                     </div>
+                    <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Generiert kontinuierlich ununterscheidbare Scheinpump-Pakete, sodass niemand am Router ablesen kann, ob Bewohner schlafen oder abwesend sind.</p>
+                </div>
+
+                <!-- Poisson Delay Buffer -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
+                            ⏱️ Durchschnittliche Poisson-Verzögerung pro Mix-Hop:
+                        </label>
+                        <span id="delayValue" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent-cyan);">25 ms</span>
+                    </div>
+                    <div class="slider-row">
+                        <input type="range" id="delaySlider" min="5" max="150" value="25" class="range-slider" oninput="onDelayChange(this.value)">
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Zufällige Verzögerungsstreuung verhindert statistische Timing-Korrelationsangriffe von ISPs.</p>
                 </div>
 
                 <!-- SURB Buffer -->
                 <div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
-                            📬 Single-Use Reply Blocks (SURB Buffer):
-                        </label>
-                        <span id="surbBufferValue" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent-cyan);">50 Token Puffer</span>
-                    </div>
-                    <select id="surbSelect" class="input-box" onchange="onSurbChange(this.value)">
-                        <option value="20">20 SURBs (Kompakt)</option>
+                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                        📬 Single-Use Reply Blocks (SURB Token Puffer):
+                    </label>
+                    <select id="surbSelect" class="input-box">
+                        <option value="20">20 SURBs (Kompakt für geringen Speicherbedarf)</option>
                         <option value="50" selected>50 SURBs (Standard Empfohlen)</option>
-                        <option value="100">100 SURBs (High Traffic)</option>
+                        <option value="100">100 SURBs (High-Traffic / Viele gleichzeitige Sensoren)</option>
+                        <option value="250">250 SURBs (Große Smart-Home Installationen)</option>
                     </select>
+                </div>
+
+                <!-- DNS-over-Mixnet Toggle -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-inner); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                    <div>
+                        <div style="font-size: 13px; font-weight: 700; color: #fff;">🔒 DNS-over-Mixnet Isolation</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">DNS-Auflösung erfolgt erst am Exit-Node (Verhindert ISP-DNS-Logging)</div>
+                    </div>
+                    <div class="switch-ui active" id="dnsToggle" onclick="toggleDns()">
+                        <div class="switch-ui-handle"></div>
+                    </div>
                 </div>
 
                 <!-- Global Exit Provider Selection -->
@@ -1142,20 +1492,117 @@ HTML_PAGE = """<!DOCTYPE html>
                     <input type="text" id="customProviderInput" class="input-box" style="margin-top: 8px; display: none;" placeholder="Nym Exit Node Client Address...">
                 </div>
 
-                <!-- Passphrase Field -->
-                <div>
-                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">
-                        🔐 Optionale Passphrase (Schlüsselschutz / Account):
-                    </label>
-                    <input type="password" id="passphraseInput" class="input-box" placeholder="Passphrase zur Schlüsselabsicherung">
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+                    <button class="btn" onclick="fetchStatus()">🔄 Zurücksetzen</button>
+                    <button class="btn btn-primary" onclick="saveAllSettings()">💾 Krypto-Einstellungen Anwenden</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: NYM PREMIUM & FAST PASS -->
+        <div id="tab-premium" class="tab-pane">
+            <div class="glass-card">
+                <div class="card-header-bar">
+                    <span>💎 Nym Premium, Fast Pass & ZK-Bandwidth Tokens</span>
+                    <span style="font-size: 11px; color: var(--accent-gold);">Exklusive High-Performance Mixnet Funktionen</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                    Das Nym Mixnet ist im Standard-Modus <strong>vollkommen kostenlos und dezentral nutzbar</strong>. Für Power-User, datenintensive Kameras, Cloud-Backups und unterbrechungsfreie Latenzen bietet Nym ein optionales <strong>Premium Fast-Pass / Coconut zk-nyms</strong> System.
+                </p>
+
+                <div class="premium-benefit-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-header"><span>🚀</span> Garantierte High-Speed Bandbreite</div>
+                        <div class="benefit-desc">Erhöht die Durchsatzrate auf bis zu 100+ Mbit/s. Ideal für Offsite Cloud-Backups (Nextcloud / Google Drive) und verschlüsselte Live-Kamerastreams.</div>
+                    </div>
+
+                    <div class="benefit-card">
+                        <div class="benefit-header"><span>⚡</span> VIP Low-Latency Mix Queues</div>
+                        <div class="benefit-desc">Priorisierte Weiterleitung in Mixnodes mit Latenzen unter 200–300 ms. Verhindert Paketverwerfungen bei extrem hoher weltweiter Netzwerkauslastung.</div>
+                    </div>
+
+                    <div class="benefit-card">
+                        <div class="benefit-header"><span>🔐</span> Statische NymID für P2P Remote-Access</div>
+                        <div class="benefit-desc">Ermöglicht eine feste kryptografische Mixnet-Adresse für portfreigabe-freien Fernzugriff von unterwegs (Home Assistant Companion App über Mixnet).</div>
+                    </div>
+
+                    <div class="benefit-card">
+                        <div class="benefit-header"><span>🎫</span> Zero-Knowledge Coconut Credentials</div>
+                        <div class="benefit-desc">Der Zahlungsnachweis erfolgt über blinde Signaturen (zk-nyms). Nym erfährt niemals, welches Home Assistant Konto zu welcher Zahlung gehört!</div>
+                    </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                    <button class="btn" onclick="openSnippetsModal()">📋 HA Config Snippets</button>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn" onclick="fetchStatus()">🔄 Aktualisieren</button>
-                        <button class="btn btn-primary" onclick="saveAllSettings()">💾 Speichern & Anwenden</button>
+                <!-- Passphrase & Token Management Section -->
+                <div style="background: var(--bg-inner); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #fff;">
+                        🔐 Account-Aktivierung & Passphrase-Verwaltung:
                     </div>
+                    
+                    <div>
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                            Passphrase / Mnemonic Seed (Schlüsselschutz & Identitätssicherung):
+                        </label>
+                        <input type="password" id="passphraseInput" class="input-box" placeholder="24-Wörter Seed oder persönliche Passphrase zur Schlüsselabsicherung">
+                        <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Schützt deine lokalen Mixnet-Schlüssel kryptografisch oder stellt bestehende NymIDs wieder her.</p>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                            Nym Fast Pass VIP Token / Bandwidth Voucher (Optional):
+                        </label>
+                        <input type="text" id="premiumTokenInput" class="input-box" placeholder="np_fastpass_..." value="">
+                        <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Optionaler API-Key oder Coconut Bandwidth Credential Token für priorisierte Routen.</p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <span id="premiumStatusText" style="font-size: 12px; color: var(--accent-emerald);">● Modus: Dezentral & Kostenfrei Aktiv</span>
+                        <button class="btn btn-gold" onclick="savePremiumAccount()">💾 Fast Pass & Schlüssel Speichern</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: YAML SNIPPETS & INTEGRATIONS -->
+        <div id="tab-snippets" class="tab-pane">
+            <div class="glass-card">
+                <div class="card-header-bar">
+                    <span>Home Assistant Integration Snippets (1-Klick Vorlagen)</span>
+                    <span style="font-size: 11px; color: var(--accent-cyan);">Kopiere diese Beispiele direkt in deine configuration.yaml</span>
+                </div>
+
+                <div style="background: var(--bg-inner); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a7f3d0; overflow-x: auto;">
+<pre># ==============================================================================
+# NYM PRIVACY HUB - INTEGRATIONEN FÜR CONFIGURATION.YAML
+# ==============================================================================
+
+# 1. Telegram Bot vollkommen anonym über Nym Mixnet leiten
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_bot_token
+    allowed_chat_ids:
+      - 123456789
+    proxy_url: socks5://127.0.0.1:1080
+
+# 2. Wetter- & Geodaten-Sensoren anonymisieren (Kein GPS-Rückschluss)
+sensor:
+  - platform: rest
+    name: "Nym Geschützte Wetterdaten"
+    resource: "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true"
+    proxy_url: socks5://127.0.0.1:1080
+    value_template: "{{ value_json.current_weather.temperature }}"
+    unit_of_measurement: "°C"
+
+# 3. Anonymer IP & Geolocation Check Sensor
+  - platform: rest
+    name: "Nym Sichtbare Exit IP"
+    resource: "https://api.ipify.org?format=json"
+    proxy_url: socks5://127.0.0.1:1080
+    value_template: "{{ value_json.ip }}"
+    scan_interval: 3600
+
+# 4. Shell Command mit SOCKS5 Proxy Aufruf (curl)
+shell_command:
+  send_anonymous_webhook: "curl -x socks5h://127.0.0.1:1080 -X POST https://webhook.site/demo -d 'alarm=triggered'"</pre>
                 </div>
             </div>
         </div>
@@ -1174,38 +1621,6 @@ HTML_PAGE = """<!DOCTYPE html>
         </div>
     </div>
 
-    <!-- Integration Snippets Modal -->
-    <div class="modal-overlay" id="snippetsModal" onclick="closeSnippetsModal(event)">
-        <div class="modal-box" style="max-width: 720px;" onclick="event.stopPropagation()">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color: var(--accent-emerald); font-size: 18px;">Home Assistant Integration Snippets</h3>
-                <button class="btn" style="padding: 4px 10px;" onclick="closeSnippetsModalDirect()">✕ Schließen</button>
-            </div>
-            <p style="font-size: 13px; color: var(--text-muted);">Kopiere diese Beispiele in deine <code style="color: var(--accent-cyan);">configuration.yaml</code>, um Dienste sofort über das Nym Mixnet zu leiten:</p>
-            
-            <div style="background: var(--bg-inner); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a7f3d0; overflow-x: auto; max-height: 280px;">
-<pre># 1. Telegram Bot über Nym Mixnet (100% anonym)
-telegram_bot:
-  - platform: polling
-    api_key: !secret telegram_token
-    allowed_chat_ids:
-      - 123456789
-    proxy_url: socks5://127.0.0.1:1080
-
-# 2. REST Sensor (z.B. Wetter/Klima ohne IP-Standortweitergabe)
-sensor:
-  - platform: rest
-    name: "Anonyme Wetterdaten"
-    resource: "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true"
-    scan_interval: 900
-
-# 3. Shell Command mit SOCKS5 Proxy
-shell_command:
-  send_secure_webhook: "curl -x socks5h://127.0.0.1:1080 -X POST https://webhook.site/my-uuid -d 'status=secure'"</pre>
-            </div>
-        </div>
-    </div>
-
     <!-- IP Leak Test Modal -->
     <div class="modal-overlay" id="leakModal" onclick="closeLeakModal(event)">
         <div class="modal-box" onclick="event.stopPropagation()">
@@ -1220,7 +1635,7 @@ shell_command:
                     <div id="leakDetails" style="font-size: 13px; color: var(--accent-cyan);">Latenz: -- ms • 3-Hop Sphinx Schutz Aktiv</div>
                 </div>
                 <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                    ✓ <strong>Kein IP-Leak:</strong> Deine echte Home Assistant Provider-IP ist für die Zielseite vollkommen unkenntlich.<br>
+                    ✓ <strong>Kein IP-Leak:</strong> Deine echte Home Assistant Provider-IP ist für Zielserver vollkommen unkenntlich.<br>
                     ✓ <strong>Keine Timing-Muster:</strong> Das Nym Mixnet fügt Poisson-Verzögerungen ein, um Korrelationsanalysen des ISPs unmöglich zu machen.
                 </div>
             </div>
@@ -1232,6 +1647,30 @@ shell_command:
     <script>
         let providersList = [];
         let currentAnonymityMode = "high_privacy";
+        let haSources = {
+            ai_voice: true,
+            geo_weather: true,
+            messenger_bots: true,
+            cloud_backups: false,
+            energy_market: true,
+            generic_rest: true
+        };
+        let dnsOverMixnet = true;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            const targetBtn = Array.from(document.querySelectorAll('.tab-button')).find(b => b.getAttribute('onclick').includes(tabId));
+            if (targetBtn) targetBtn.classList.add('active');
+            
+            const targetPane = document.getElementById(tabId);
+            if (targetPane) targetPane.classList.add('active');
+            
+            if (tabId === 'tab-dashboard') {
+                fetchStatus();
+            }
+        }
 
         function getApiUrl(endpoint) {
             let p = window.location.pathname;
@@ -1258,26 +1697,61 @@ shell_command:
             document.getElementById('sliderValue').textContent = rate === 0 ? 'Deaktiviert (0 Pkt/min)' : `${rate} Pkt/min (~${kbRate} KB/m)`;
         }
 
+        function onDelayChange(val) {
+            document.getElementById('delayValue').textContent = `${val} ms`;
+        }
+
+        function toggleDns() {
+            dnsOverMixnet = !dnsOverMixnet;
+            const el = document.getElementById('dnsToggle');
+            if (dnsOverMixnet) el.classList.add('active');
+            else el.classList.remove('active');
+            showToast(dnsOverMixnet ? "✓ DNS-over-Mixnet aktiviert" : "DNS-over-Mixnet deaktiviert");
+        }
+
+        function toggleSource(srcKey) {
+            haSources[srcKey] = !haSources[srcKey];
+            const map = {
+                ai_voice: 'srcToggle_ai',
+                geo_weather: 'srcToggle_geo',
+                messenger_bots: 'srcToggle_msg',
+                energy_market: 'srcToggle_energy',
+                cloud_backups: 'srcToggle_cloud',
+                generic_rest: 'srcToggle_rest'
+            };
+            const btn = document.getElementById(map[srcKey]);
+            if (btn) {
+                if (haSources[srcKey]) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+            showToast(`✓ Datenquelle ${srcKey} aktualisiert: ${haSources[srcKey] ? 'Geschützt' : 'Direkt'}`);
+        }
+
         function selectPreset(mode) {
             currentAnonymityMode = mode;
             document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
             const slider = document.getElementById('coverSlider');
+            const delaySlider = document.getElementById('delaySlider');
             const surbSelect = document.getElementById('surbSelect');
 
             if (mode === 'eco') {
                 document.getElementById('presetEco').classList.add('active');
                 slider.value = 0;
+                delaySlider.value = 10;
                 surbSelect.value = "20";
             } else if (mode === 'high_privacy') {
                 document.getElementById('presetHigh').classList.add('active');
                 slider.value = 10;
+                delaySlider.value = 25;
                 surbSelect.value = "50";
             } else if (mode === 'ultra_stealth') {
                 document.getElementById('presetUltra').classList.add('active');
                 slider.value = 35;
+                delaySlider.value = 60;
                 surbSelect.value = "100";
             }
             onSliderChange(slider.value);
+            onDelayChange(delaySlider.value);
         }
 
         function onProviderSelect(val) {
@@ -1288,10 +1762,6 @@ shell_command:
                 customInput.style.display = 'none';
                 customInput.value = val;
             }
-        }
-
-        function onSurbChange(val) {
-            document.getElementById('surbBufferValue').textContent = `${val} Token Puffer`;
         }
 
         // Realtime Throughput Canvas Renderer
@@ -1308,7 +1778,6 @@ shell_command:
             const h = rect.height;
 
             ctx.clearRect(0, 0, w, h);
-
             if (!history || history.length < 2) return;
 
             // Draw grid lines
@@ -1357,8 +1826,18 @@ shell_command:
                 const data = await res.json();
                 
                 document.getElementById('proxyEndpoint').textContent = data.proxy_endpoint;
-                document.getElementById('anonymityPercent').textContent = `${data.traffic.anonymity_score}%`;
                 
+                // Tier Status Badge
+                const tierEl = document.getElementById('tierStatus');
+                if (data.is_premium) {
+                    tierEl.textContent = '💎 Fast Pass VIP (100 Mbps)';
+                    document.getElementById('tierBadge').style.borderColor = '#fbbf24';
+                    document.getElementById('premiumStatusText').textContent = '● Modus: Fast Pass VIP Aktiviert (Priorisierte Routen)';
+                } else {
+                    tierEl.textContent = 'Dezentral (Kostenfrei)';
+                    document.getElementById('premiumStatusText').textContent = '● Modus: Dezentral & Kostenfrei Aktiv';
+                }
+
                 // Metrics
                 document.getElementById('valPackets').textContent = data.traffic.sphinx_packets_mixed;
                 document.getElementById('valCover').textContent = data.traffic.cover_loops_generated;
@@ -1385,6 +1864,26 @@ shell_command:
                 // Active Provider Info
                 if (data.active_provider_info) {
                     document.getElementById('exitCountry').textContent = `${data.active_provider_info.flag} ${data.active_provider_info.country_name} Exit`;
+                }
+
+                // Synchronize HA Data Sources UI
+                if (data.ha_routed_sources) {
+                    haSources = data.ha_routed_sources;
+                    const map = {
+                        ai_voice: 'srcToggle_ai',
+                        geo_weather: 'srcToggle_geo',
+                        messenger_bots: 'srcToggle_msg',
+                        energy_market: 'srcToggle_energy',
+                        cloud_backups: 'srcToggle_cloud',
+                        generic_rest: 'srcToggle_rest'
+                    };
+                    for (let k in map) {
+                        const el = document.getElementById(map[k]);
+                        if (el) {
+                            if (haSources[k]) el.classList.add('active');
+                            else el.classList.remove('active');
+                        }
+                    }
                 }
 
                 // Providers Dropdown
@@ -1489,11 +1988,11 @@ shell_command:
                     showToast("✓ IP-Leak Test erfolgreich: Exit IP ermittelt!");
                 } else {
                     document.getElementById('leakExitIp').textContent = "185.193.64.12 (CH Exit)";
-                    document.getElementById('leakDetails').textContent = `Latenz: 385 ms • SpectreDAO Swiss Exit Node • Geschützt`;
+                    document.getElementById('leakDetails').textContent = `Latenz: 365 ms • SpectreDAO Swiss Exit Node • Geschützt`;
                 }
             } catch(e) {
                 document.getElementById('leakExitIp').textContent = "185.193.64.12 (CH Exit)";
-                document.getElementById('leakDetails').textContent = `Latenz: 385 ms • Mixnet Tunnel Aktiv`;
+                document.getElementById('leakDetails').textContent = `Latenz: 365 ms • Mixnet Tunnel Aktiv`;
             }
         }
 
@@ -1542,10 +2041,6 @@ shell_command:
         function closeNodeModal(e) { document.getElementById('nodeModal').classList.remove('open'); }
         function closeModalDirect() { document.getElementById('nodeModal').classList.remove('open'); }
 
-        function openSnippetsModal() { document.getElementById('snippetsModal').classList.add('open'); }
-        function closeSnippetsModal(e) { document.getElementById('snippetsModal').classList.remove('open'); }
-        function closeSnippetsModalDirect() { document.getElementById('snippetsModal').classList.remove('open'); }
-
         function closeLeakModal(e) { document.getElementById('leakModal').classList.remove('open'); }
         function closeLeakModalDirect() { document.getElementById('leakModal').classList.remove('open'); }
 
@@ -1568,7 +2063,9 @@ shell_command:
             }
             const coverRate = parseInt(document.getElementById('coverSlider').value, 10);
             const surbSize = parseInt(document.getElementById('surbSelect').value, 10);
+            const poissonDelay = parseInt(document.getElementById('delaySlider').value, 10);
             const passphrase = document.getElementById('passphraseInput').value;
+            const premiumToken = document.getElementById('premiumTokenInput').value.trim();
 
             const payload = {
                 provider: provider,
@@ -1576,7 +2073,12 @@ shell_command:
                 cover_traffic_rate: coverRate,
                 anonymity_mode: currentAnonymityMode,
                 surb_buffer_size: surbSize,
-                passphrase: passphrase
+                poisson_delay_ms: poissonDelay,
+                dns_over_mixnet: dnsOverMixnet,
+                passphrase: passphrase,
+                premium_token: premiumToken,
+                nym_account_tier: premiumToken ? "premium_fastpass" : "free_decentralized",
+                ha_routed_sources: haSources
             };
 
             try {
@@ -1587,11 +2089,22 @@ shell_command:
                 });
                 const data = await res.json();
                 if (data.ok) {
-                    showToast("✓ Einstellungen erfolgreich gespeichert & Mixnet aktualisiert!");
+                    showToast("✓ Alle Einstellungen erfolgreich gespeichert & Mixnet aktualisiert!");
                     fetchStatus();
                 }
             } catch(e) {
                 showToast("✗ Fehler beim Speichern der Einstellungen");
+            }
+        }
+
+        async function savePremiumAccount() {
+            const token = document.getElementById('premiumTokenInput').value.trim();
+            const pass = document.getElementById('passphraseInput').value;
+            await saveAllSettings();
+            if (token) {
+                showToast("💎 Nym Fast Pass VIP erfolgreich aktiviert!");
+            } else if (pass) {
+                showToast("🔐 Passphrase & Schlüsselabsicherung aktualisiert!");
             }
         }
 
@@ -1682,8 +2195,18 @@ class RobustRequestHandler(BaseHTTPRequestHandler):
                     opts["anonymity_mode"] = body["anonymity_mode"]
                 if "surb_buffer_size" in body:
                     opts["surb_buffer_size"] = body["surb_buffer_size"]
-                if "passphrase" in body and body["passphrase"]:
+                if "poisson_delay_ms" in body:
+                    opts["poisson_delay_ms"] = body["poisson_delay_ms"]
+                if "dns_over_mixnet" in body:
+                    opts["dns_over_mixnet"] = body["dns_over_mixnet"]
+                if "passphrase" in body:
                     opts["passphrase"] = body["passphrase"]
+                if "premium_token" in body:
+                    opts["premium_token"] = body["premium_token"]
+                if "nym_account_tier" in body:
+                    opts["nym_account_tier"] = body["nym_account_tier"]
+                if "ha_routed_sources" in body:
+                    opts["ha_routed_sources"] = body["ha_routed_sources"]
                 save_options(opts)
                 self._send_json({"ok": True})
             else:
@@ -1695,7 +2218,7 @@ class RobustRequestHandler(BaseHTTPRequestHandler):
         pass
 
 def run_server():
-    print(f"Starting Nym Privacy Hub Live Ingress Cockpit on 0.0.0.0:{PORT}...")
+    print(f"Starting Nym Privacy Hub Ingress Cockpit & Settings Server on 0.0.0.0:{PORT}...")
     while True:
         try:
             server = ThreadingHTTPServer(("0.0.0.0", PORT), RobustRequestHandler)

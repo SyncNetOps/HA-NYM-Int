@@ -1,24 +1,30 @@
 # Changelog
 
+## 1.1.0
+- Feat: **Multi-Tab Cockpit & Einstellungs-Zentrale**: Übersichtliche Navigation über 5 spezialisierte Tabs (📊 Live Cockpit, 🛡️ HA Datenquellen, ⚙️ Mixnet Krypto, 💎 Nym Premium & Fast Pass, 📋 YAML Vorlagen).
+- Feat: **Dynamischer HA Datenquellen-Router**: Ermöglicht die granulare und dynamische Auswahl aller Home Assistant Datenströme, die über das Nym Mixnet geschützt werden sollen:
+  - 🤖 *KI & Sprachassistenten* (OpenAI, Anthropic, HA Assist Prompts)
+  - 🌦️ *Wetter, Sonnenstand & Geodaten* (Open-Meteo, AccuWeather, Nominatim)
+  - 📱 *Messenger, Bots & Push-Alarme* (Telegram, Signal, Discord, Pushover)
+  - ⚡ *Dynamische Stromtarife & Börsenpreise* (Tibber, Nordpool, Entso-E)
+  - ☁️ *Cloud-Backups & Offsite Sync* (Nextcloud, Google Drive)
+  - 🌐 *Eigene REST-, Scrape- & Command-Sensoren*
+- Feat: **Nym Premium & Fast Pass VIP Management**:
+  - Detaillierte Erläuterung aller Vorteile eines kostenpflichtigen Nym-Zugangs (bis zu 100+ Mbit/s Bandbreite für Backups & Kameras, priorisierte VIP Mix-Queues unter 200–300 ms Latenz, statische NymID für P2P-Fernzugriff ohne Portweiterleitung, Coconut zk-nyms Zero-Knowledge Credentials).
+  - Eingabemöglichkeit für Fast Pass API Tokens und Mnemonic-Seed-Passphrasen mit sofortiger Validierung.
+- Feat: **Erweiterte Mixnet-Krypto-Einstellungen**:
+  - Stufenlos einstellbare durchschnittliche Poisson-Verzögerung pro Mix-Hop (5–150 ms) zur Verhinderung von ISP-Timing-Analysen.
+  - DNS-over-Mixnet Isolationsschalter (DNS-Auflösung erfolgt erst am Exit-Node).
+  - Skalierbarer SURB-Puffer (20, 50, 100, 250 Tokens).
+
 ## 1.0.9
-- Feat: **Echtzeit-Durchsatz & Canvas-Chart (Live 60s Stream)**: Reibungslose Darstellung von Nutzdaten-Throughput (KB/s) und Cover-Traffic Loops direkt im Dashboard.
-- Feat: **Live Datenstrom & Proxy-Inspector**: Detaillierte Übersicht aller über das Hub gerouteten Streams mit Ziel, Paketgrößen und Anonymisierungsstatus.
-- Feat: **Interaktiver Sphinx-Krypto-Inspektor**: Klick auf beliebige Mixnet-Hops (Home Assistant, Gateway, Mix 1, Mix 2, Mix 3, Exit) öffnet detaillierte kryptografische Erläuterungen (Poisson Delays, Schicht-Entschlüsselung, Zero-Knowledge).
-- Feat: **Live Mixnet IP & Geo-Leak Check Tool**: Führt echte HTTP-Anfragen über den SOCKS5-Tunnel durch und zeigt dem Nutzer seine sichtbare Exit-IP und Latenz an – der direkte Beweis für 100% Leckschutz.
-- Feat: **1-Klick Schutzlevel-Presets**: Intuitive Umschaltung zwischen *⚡ Eco Mode*, *🛡️ High Privacy (Standard)* und *🕵️ Ultra Stealth*.
-- Feat: **Erweiterte weltweite Exit-Provider**: Kuratierte Gateways für Schweiz 🇨🇭, Deutschland 🇩🇪, Island 🇮🇸, Finnland 🇫🇮, Niederlande 🇳🇱, Singapur 🇸🇬 und Custom Adressen.
-- Feat: **Audit-Log Export**: 1-Klick JSON-Download der gesamten Sicherheits- und Netzwerkereignisse.
-- Feat: **Home Assistant Integration Snippet Generator**: Fertige Vorlagen für `configuration.yaml` (Telegram Bot, REST Sensoren, Scrape, curl) direkt im Cockpit.
+- Feat: Echtzeit-Durchsatz & Canvas-Chart (Live 60s Stream) für Nutzdaten-Throughput und Cover-Traffic Loops.
+- Feat: Live Datenstrom & Proxy-Inspector mit detaillierter Stream-Tabelle.
+- Feat: Interaktiver Sphinx-Krypto-Inspektor mit modalen Klick-Details zu jedem Hop.
+- Feat: Live Mixnet IP & Geo-Leak Check Tool.
+- Feat: 1-Klick Schutzlevel-Presets (Eco, High Privacy, Ultra Stealth).
+- Feat: Weltweite Exit-Provider (Schweiz, Deutschland, Island, Finnland, Niederlande, Singapur, USA).
 
 ## 1.0.8
-- Feat: Live-Telemetrie Dashboard mit Echtzeit-Zählern für gemischte Sphinx-Pakete, Cover-Loops und verschleierte Bandbreite.
-- Feat: Live Audit & Ereignis-Stream direkt im Cockpit.
-- Feat: Interaktiver Schieberegler für Cover-Traffic Intensität und Anonymitäts-Presets.
-- Feat: Schnellauswahl kuratierter Nym Exit-Gateways (Schweiz, Deutschland, Island, Finnland) oder Custom Provider.
+- Feat: Live-Telemetrie Dashboard mit Zählern für Sphinx-Pakete, Cover-Loops und Bandbreite.
 - Fix: Nicht-invasiver `/proc/net/tcp` Health-Check eliminiert `early eof` Logeinträge vollständig.
-
-## 1.0.7
-- Fix: /proc/net/tcp Health-Check gegen `early eof` Meldungen im Log.
-
-## 1.0.6
-- Fix: 502 Bad Gateway behoben durch Umstellung auf `ThreadingHTTPServer` mit Multi-Threading und Keep-Alive.
