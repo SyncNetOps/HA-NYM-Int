@@ -1,10 +1,10 @@
 # 📐 Architektur- und Spezifikationsdokument
 
-## Projekt: Nym Privacy Hub für Home Assistant (v1.0.6)
+## Projekt: Nym Privacy Hub für Home Assistant (v1.0.9)
 
 ### 1. Systemarchitektur
 
-Der **Nym Privacy Hub** folgt einem modernen, zweischichtigen Architekturmodell:
+Der **Nym Privacy Hub** folgt einem modernen, zweischichtigen Architekturmodell mit vollständiger Transparenz und integrierter Live-Telemetrie:
 
 ```text
 +-------------------------------------------------------------------------+
@@ -15,9 +15,11 @@ Der **Nym Privacy Hub** folgt einem modernen, zweischichtigen Architekturmodell:
 |  |                                   |  |                            |  |
 |  | - Config Flow & Options Flow      |  | - nym-socks5-client        |  |
 |  | - Lovelace Custom Dashboard Card  |  |   (Port 1080)              |  |
-|  | - Data Coordinator (Polling 30s)  |  | - Ingress Web Dashboard    |  |
+|  | - Data Coordinator (Polling 30s)  |  | - Ingress Web Cockpit      |  |
 |  | - Switches & Sensoren Suite       |  |   (Port 8099 / Sidebar)    |  |
-|  | - Service Call Handlers           |  | - /data/.nym Key-Storage   |  |
+|  | - Service Call Handlers           |  | - Live Throughput Canvas   |  |
+|  |                                   |  | - SOCKS5 IP-Leak Check     |  |
+|  |                                   |  | - /data/.nym Key-Storage   |  |
 |  +-----------------+-----------------+  +--------------+-------------+  |
 |                    |                                   |                |
 |                    +====== SOCKS5 / HA API ============+                |
@@ -38,9 +40,10 @@ Der **Nym Privacy Hub** folgt einem modernen, zweischichtigen Architekturmodell:
 
 ### 2. Detaillierte Funktions- und Sicherheits-Spezifikation
 
-#### 2.1 Sphinx Packet Format
-* Jedes Datenpaket wird in identisch große Sphinx-Pakete fragmentiert und mit mehreren Schichten asymmetrischer Kryptografie versehen.
-* Mixknoten entfernen jeweils nur die äußerste Schicht, führen eine künstliche Verzögerung ein und mischen die Pakete unter fremden Datenverkehr.
+#### 2.1 Sphinx Packet Format & Frame Consistency
+* Jedes Datenpaket wird in exakt **2708 Bytes große, uniforme Sphinx-Frames** fragmentiert und mit mehreren Schichten asymmetrischer Kryptografie versehen.
+* Dies eliminiert Größen-Fingerprinting und verhindert, dass Angreifer Rückschlüsse auf übertragene Datenmengen ziehen.
+* Mixknoten entfernen jeweils nur die eigene äußere Krypto-Schicht, führen eine künstliche Verzögerung ein (Poisson Process) und mischen die Pakete unter fremden Datenverkehr.
 
 #### 2.2 SOCKS5 Bridge Layer (Port `1080`)
 * **Bind-Adresse**: `0.0.0.0:1080`
@@ -50,7 +53,9 @@ Der **Nym Privacy Hub** folgt einem modernen, zweischichtigen Architekturmodell:
 
 #### 2.3 Ingress Web Cockpit Layer (Port `8099`)
 * **Multi-Threaded Server**: `ThreadingHTTPServer` mit nativer Keep-Alive Unterstützung.
-* **Diagnostik**: Live-Ping-Prüfung und SOCKS5-Handshake-Verifikation.
+* **Live Throughput Chart**: 60 FPS HTML5 Canvas Graph für Payload Rate (KB/s) und Cover-Traffic Loops.
+* **Live Streams Inspector**: Ringpuffer aktiver und kürzlicher Datenströme durch das Mixnet.
+* **IP-Leak & Geo-Check**: Eingebauter SOCKS5 HTTP-Client zur Überprüfung der sichtbaren Exit-IP.
 * **Passphrase-Manager**: Konfiguration und Verwaltung optionaler Mnemonics und Passphrasen.
 
 ---
@@ -60,7 +65,8 @@ Der **Nym Privacy Hub** folgt einem modernen, zweischichtigen Architekturmodell:
 | Feature | Einsteiger (Default Ansicht) | Profi (Advanced Options) |
 |---|---|---|
 | **Verbindung** | 1-Klick Start & Status-Badge | Gateway-Auswahl, Topologie-Details |
-| **KI / LLM Privacy** | Einfacher Toggle | Selektive Domain-Filter & Anonyme Services |
-| **Cover Traffic** | Einfacher Toggle | Traffic-Intensität (1–120 Pakete/min) |
+| **Schutzlevel** | 1-Klick Presets (Eco, High, Ultra) | Granularer Schieberegler (0–60 Pkt/min) |
+| **Transparenz** | Live 3-Hop Route Visualizer | Krypto-Hop-Inspektor, Durchsatz-Graph & Stream-Tabelle |
+| **Leak-Schutz** | Status-Anzeige | Live IP-Leak & Geo-Check Tool |
 | **Schlüsselschutz**| Automatische Schlüsselpaare | Eigene Passphrase / Mnemonic Seed |
-| **Automatisierung**| Lovelace Dashboard Card | Home Assistant Services (`send_anonymous_request`) |
+| **Integration** | Snippet-Generator | Eigene YAML Snippets & Service Calls |

@@ -16,6 +16,8 @@ class NymPrivacyHubCard extends HTMLElement {
       entity_status: 'sensor.nym_mixnet_status',
       entity_latency: 'sensor.nym_mixnet_latenz',
       entity_proxy: 'sensor.nym_proxy_endpunkt',
+      entity_packets: 'sensor.nym_anonymisierte_pakete',
+      entity_cover_rate: 'sensor.nym_cover_traffic_rate',
       entity_ai: 'switch.ki_voice_privacy',
       entity_geo: 'switch.wetter_geodaten_schutz',
       entity_cover: 'switch.anti_einbruchs_schutz_cover_traffic',
@@ -58,7 +60,7 @@ class NymPrivacyHubCard extends HTMLElement {
       toast.className = 'toast show';
       setTimeout(() => {
         toast.className = 'toast';
-      }, 3000);
+      }, 3200);
     }
   }
 
@@ -66,8 +68,10 @@ class NymPrivacyHubCard extends HTMLElement {
     if (!this._hass) return;
 
     const statusState = this._hass.states[this._config.entity_status]?.state || 'connected';
-    const latencyVal = this._hass.states[this._config.entity_latency]?.state || '450';
+    const latencyVal = this._hass.states[this._config.entity_latency]?.state || '412';
     const proxyUrl = this._hass.states[this._config.entity_proxy]?.state || 'socks5://127.0.0.1:1080';
+    const packetsVal = this._hass.states[this._config.entity_packets]?.state || '348';
+    const coverRateVal = this._hass.states[this._config.entity_cover_rate]?.state || '10';
     
     const aiState = this._hass.states[this._config.entity_ai]?.state === 'on';
     const geoState = this._hass.states[this._config.entity_geo]?.state === 'on';
@@ -78,21 +82,21 @@ class NymPrivacyHubCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-bg: var(--ha-card-background, #111827);
-          --card-border: rgba(0, 245, 160, 0.2);
+          --card-bg: var(--ha-card-background, #0f172a);
+          --card-border: rgba(0, 245, 160, 0.22);
           --cyan: #00f5a0;
           --blue: #00d9f5;
           --purple: #8b5cf6;
-          --text-main: #f9fafb;
-          --text-muted: #9ca3af;
+          --text-main: #f8fafc;
+          --text-muted: #94a3b8;
           --font-family: var(--paper-font-body1_-_font-family, 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif);
         }
 
         ha-card {
-          background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.85));
+          background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 12, 20, 0.9));
           border-radius: 20px;
           border: 1px solid var(--card-border);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 245, 160, 0.08);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 245, 160, 0.08);
           padding: 24px;
           color: var(--text-main);
           font-family: var(--font-family);
@@ -104,8 +108,8 @@ class NymPrivacyHubCard extends HTMLElement {
           content: '';
           position: absolute;
           top: 0;
-          left: 15%;
-          right: 15%;
+          left: 10%;
+          right: 10%;
           height: 2px;
           background: linear-gradient(90deg, transparent, var(--cyan), var(--blue), transparent);
         }
@@ -124,16 +128,16 @@ class NymPrivacyHubCard extends HTMLElement {
         }
 
         .logo {
-          width: 44px;
-          height: 44px;
+          width: 46px;
+          height: 46px;
           border-radius: 12px;
           background: linear-gradient(135deg, var(--cyan), var(--blue));
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 22px;
-          box-shadow: 0 4px 15px rgba(0, 245, 160, 0.3);
-          color: #0b0f19;
+          font-size: 24px;
+          box-shadow: 0 4px 16px rgba(0, 245, 160, 0.35);
+          color: #080c14;
         }
 
         .title-area h2 {
@@ -184,12 +188,13 @@ class NymPrivacyHubCard extends HTMLElement {
           50% { transform: scale(1.4); opacity: 1; }
         }
 
+        /* 3-Hop Visualizer */
         .route-box {
-          background: rgba(0, 0, 0, 0.3);
+          background: rgba(0, 0, 0, 0.35);
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 14px;
           padding: 16px;
-          margin-bottom: 20px;
+          margin-bottom: 18px;
         }
 
         .route-title {
@@ -216,15 +221,15 @@ class NymPrivacyHubCard extends HTMLElement {
         }
 
         .hop-circle {
-          width: 34px;
-          height: 34px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(0, 245, 160, 0.3);
+          background: rgba(0, 245, 160, 0.12);
+          border: 1px solid rgba(0, 245, 160, 0.35);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 14px;
+          font-size: 15px;
           color: var(--cyan);
         }
 
@@ -252,7 +257,7 @@ class NymPrivacyHubCard extends HTMLElement {
           border-radius: 50%;
           background: #fff;
           box-shadow: 0 0 6px #fff;
-          animation: hopFlow 2.5s linear infinite;
+          animation: hopFlow 2.2s linear infinite;
         }
 
         @keyframes hopFlow {
@@ -262,6 +267,38 @@ class NymPrivacyHubCard extends HTMLElement {
           100% { left: 100%; opacity: 0; }
         }
 
+        /* Stats Grid */
+        .stat-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+
+        .stat-card {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          padding: 12px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .stat-num {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--blue);
+        }
+
+        .stat-lbl {
+          font-size: 11px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+        }
+
+        /* Proxy Box */
         .proxy-wrapper {
           background: rgba(0, 0, 0, 0.4);
           border: 1px dashed rgba(0, 245, 160, 0.3);
@@ -270,11 +307,11 @@ class NymPrivacyHubCard extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 20px;
+          margin-bottom: 18px;
         }
 
         .proxy-text {
-          font-family: monospace;
+          font-family: 'JetBrains Mono', monospace;
           color: var(--cyan);
           font-size: 13px;
         }
@@ -295,6 +332,7 @@ class NymPrivacyHubCard extends HTMLElement {
           background: rgba(255, 255, 255, 0.2);
         }
 
+        /* Toggles */
         .toggle-group {
           display: flex;
           flex-direction: column;
@@ -363,7 +401,7 @@ class NymPrivacyHubCard extends HTMLElement {
 
         .switch-ui.active .switch-ui-handle {
           transform: translateX(18px);
-          background: #0b0f19;
+          background: #080c14;
         }
 
         .footer-actions {
@@ -376,7 +414,7 @@ class NymPrivacyHubCard extends HTMLElement {
         .btn-action {
           background: linear-gradient(135deg, var(--cyan), var(--blue));
           border: none;
-          color: #0b0f19;
+          color: #080c14;
           font-weight: 700;
           font-size: 12px;
           padding: 8px 16px;
@@ -396,11 +434,11 @@ class NymPrivacyHubCard extends HTMLElement {
           left: 50%;
           transform: translateX(-50%) translateY(50px);
           background: var(--cyan);
-          color: #0b0f19;
+          color: #080c14;
           padding: 8px 16px;
           border-radius: 8px;
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
           opacity: 0;
           transition: all 0.3s ease;
           pointer-events: none;
@@ -430,7 +468,7 @@ class NymPrivacyHubCard extends HTMLElement {
         <div class="route-box">
           <div class="route-title">
             <span>Mixnet Route Topologie</span>
-            <span style="color: var(--cyan);">3 Mix-Hops Anonymisiert</span>
+            <span style="color: var(--cyan);">3 Mix-Hops • Sphinx</span>
           </div>
           <div class="hops">
             <div class="hop">
@@ -454,9 +492,20 @@ class NymPrivacyHubCard extends HTMLElement {
             </div>
             <div class="hop-line"></div>
             <div class="hop">
-              <div class="hop-circle">🌐</div>
-              <span>Exit Gateway</span>
+              <div class="hop-circle">🚪</div>
+              <span>Exit Node</span>
             </div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-num">${packetsVal}</span>
+            <span class="stat-lbl">Sphinx Pakete Gemischt</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">${coverState ? `${coverRateVal} Pkt/m` : 'Inaktiv'}</span>
+            <span class="stat-lbl">Cover Traffic Status</span>
           </div>
         </div>
 
