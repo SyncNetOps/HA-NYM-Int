@@ -18,6 +18,7 @@ Herkömmliche VPNs verschlüsseln zwar den Datenstrom, leiten jedoch sämtliche 
 | **Metadaten-Schutz** | ❌ Gering (Zentraler VPN-Server sieht alles) | **✅ 100 % Dezentral (Zero-Knowledge Routing)** |
 | **Traffic-Timing Schutz** | ❌ Nicht geschützt (Paketmuster sichtbar) | **✅ Poisson-Verzögerung & Mixen verhindert Timing-Analyse** |
 | **Frame-Uniformität** | ❌ Variierende Paketgrößen erkennbar | **✅ Exakt 2708 Byte Sphinx-Frames (Anti-Fingerprinting)** |
+| **Exit-IP Schutz** | ❌ Feste IP-Adresse über Monate | **✅ Automatische weltweite Exit-Node Rotation (z.B. alle 15 min)** |
 | **Anti-Einbruch Cover Traffic**| ❌ Keine Verschleierung von Ruhephasen | **✅ Einstellbares Datenrauschen maskiert Anwesenheit** |
 | **Anonyme Antworten** | ❌ IP-Rückkanal bekannt | **✅ SURBs (Single Use Reply Blocks)** |
 
@@ -26,8 +27,8 @@ Herkömmliche VPNs verschlüsseln zwar den Datenstrom, leiten jedoch sämtliche 
 ## 🎛️ Die 5 Einstellungs- und Cockpit-Bereiche
 
 1. 📊 **Live Cockpit**: Animierte 3-Hop Routing Topologie mit interaktivem Krypto-Inspektor, 60s Echtzeit-Durchsatzdiagramm und Live Stream Inspector.
-2. 🛡️ **HA Datenquellen-Schutz**: Dynamische Auswahl aller Smart-Home-Daten (KI & Sprachmodelle, Wetter/GPS, Messenger-Bots, dynamische Strompreise, Cloud-Backups, REST-Sensoren).
-3. ⚙️ **Mixnet Krypto & Feintuning**: Presets (Eco, High, Ultra), stufenlose Poisson-Verzögerung (5–150 ms), SURB-Puffer (20–250 Tokens), DNS-over-Mixnet Isolation und weltweite Exit-Nodes.
+2. 🛡️ **HA Datenquellen-Schutz**: Dynamischer Scanner erkennt installierte Sensoren und leitet KI, Wetter/GPS, Messenger, Stromtarife und Cloud-Backups ins Mixnet.
+3. ⚙️ **Mixnet Krypto & Rotation**: Presets (Eco, High, Ultra), stufenlose Poisson-Verzögerung (5–150 ms), SURB-Puffer (20–250 Tokens) und automatisierte weltweite Exit-Rotation.
 4. 💎 **Nym Premium & Fast Pass**: Verwaltung von Bandwidth Credentials, zk-nyms (Coconut blinde Signaturen), High-Speed 100+ Mbps Queues für Backups/Kameras und Passphrase-Schutz.
 5. 📋 **YAML Vorlagen**: 1-Klick Code-Snippets für die direkte Einbindung in Home Assistant.
 

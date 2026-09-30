@@ -14,70 +14,52 @@ Klassische VPNs verschlüsseln zwar den Datenstrom, leiten aber alle Daten über
 3. **Anti-Einbruchs Cover Traffic**: Generiert künstliches Hintergrundrauschen, sodass niemand am Router ablesen kann, ob du schläfst, im Urlaub bist oder Alarmanlagen aktiv sind.
 4. **SURBs (Single Use Reply Blocks)**: Ermöglicht Antworten aus dem Internet, ohne dass der Empfänger jemals deine IP-Adresse erfährt.
 5. **Gleichförmige 2708-Byte Frames**: Verhindert jegliche Identifizierung von Geräten oder Protokollen anhand variierender Paketgrößen.
+6. **Automatische weltweite Exit-Rotation**: Wechselt die sichtbare Internet-IP in regelmäßigen Intervallen zur Verhinderung von Langzeit-Profiling.
 
 ---
 
-## 🎛️ Ausführliche Funktionsübersicht der 5 Cockpit-Tabs
+## 💡 Einfach erklärt: Die 5 Bereiche des Cockpits
 
 ### 1. 📊 Tab: Live Cockpit
-* **Animierter 3-Hop Route Visualizer**: Zeigt in Echtzeit den Datenfluss von Home Assistant über das Entry Gateway, Mix Layer 1, Mix Layer 2, Mix Layer 3 und den Exit-Provider ins Internet.
-* **Krypto-Hop-Inspektor**: Klick auf beliebige Knoten zeigt die exakten mathematischen und kryptografischen Abläufe (z.B. Poisson Delay, Reordering, Schicht-Entschlüsselung).
-* **60s Echtzeit-Durchsatz Canvas Chart**: Reibungslose Darstellung von echten Nutzdatenströmen (KB/s) und Cover-Traffic Schleifen.
-* **Live Datenstrom & Proxy-Inspector**: Tabelle aller aktiven Verbindungen durch den SOCKS5-Proxy mit Ziel und Paketgrößen.
-* **Live IP-Leak & Geo-Check**: Testet den SOCKS5-Tunnel und beweist die vollkommene Verschleierung der eigenen Provider-IP.
+* **Die Küchenmixer-Metapher**: Deine Daten werden wie in einem Mixer in kleine, identische 2708-Byte Päckchen zerlegt, mit künstlichem Rauschen vermischt und über 3 Server verteilt.
+* **Live Route & Inspektor**: Klicke auf die Knoten, um zu sehen, was bei jedem Schritt passiert.
+* **Canvas Durchsatz-Chart**: Zeigt in Echtzeit, wie viele Nutzdaten (`KB/s`, grün) und Cover-Loops (violett) fließen.
 
 ---
 
-### 2. 🛡️ Tab: HA Datenquellen-Schutz (Dynamisches Routing)
-Hier kannst du für jede Smart-Home Komponente einzeln und dynamisch festlegen, ob sie über das Nym Mixnet geschützt werden soll:
+### 2. 🛡️ Tab: HA Datenquellen-Schutz (Dynamischer Scanner & Router)
+Das Add-on scannt automatisch deine Home Assistant Instanz und zählt deine aktiven Sensoren:
 
-| Datenquelle | Geschützte Dienste | Verhindertes Risiko |
+| Datenquelle | Erkennung in deiner HA Instanz | Warum schützen? |
 |---|---|---|
-| **🤖 KI & Sprachassistenten** | `OpenAI`, `Anthropic`, `HA Assist Prompts`, `ElevenLabs` | Verhindert Haushalts-Profiling & Sprachbefehl-Korrelation |
-| **🌦️ Wetter & Geodaten** | `Open-Meteo`, `AccuWeather`, `Nominatim`, `Sun/Astro` | Verhindert exakte GPS-Standortermittlung des Smart Homes |
-| **📱 Messenger & Bots** | `Telegram Bot`, `Signal CLI`, `Discord`, `Pushover` | Maskiert Anwesenheitszustände und Alarmmeldungen vor ISP-Spionage |
-| **⚡ Dynamische Strompreise** | `Tibber API`, `Nordpool`, `Entso-E` | Verhindert Analyse von Ladezyklen (Elektroauto / Wärmepumpe) |
-| **☁️ Cloud-Backups & Sync** | `Nextcloud`, `Google Drive Backup`, `WebDAV` | Verschleiert Offsite-Backup Zeitstempel & Datenmengen |
-| **🌐 Eigene REST & Scrape Sensoren** | Alle individuellen HTTP-Endpunkte | Verhindert IP-Korrelation über mehrere Cloud-Dienste hinweg |
+| **🤖 KI & Sprachassistenten** | Erkennt OpenAI, Anthropic, HA Assist | Verhindert, dass Cloud-KIs Sprachmuster und Tagesabläufe protokollieren. |
+| **🌦️ Wetter & Geodaten** | Erkennt Open-Meteo, AccuWeather, Sun/Astro | Verhindert, dass Wetter-APIs deine exakten GPS-Hauskoordinaten erfahren. |
+| **📱 Messenger & Bots** | Erkennt Telegram, Signal, Discord, Push | Maskiert Anwesenheits- und Alarmmeldungen vor neugierigen Providern. |
+| **⚡ Dynamische Strompreise** | Erkennt Tibber, Nordpool, PV-Sensoren | Verhindert Rückschlüsse auf Ladezeiten von E-Autos oder Wärmepumpen. |
+| **☁️ Cloud-Backups & Sync** | Erkennt Google Drive, Nextcloud, WebDAV | Verschleiert Zeitstempel und Upload-Mengen deiner Backups. |
+| **🌐 Eigene REST / Scrape Sensoren** | Erkennt alle HTTP/REST/Scrape Entitäten | Verhindert IP-Korrelation über verschiedene externe Dienste hinweg. |
 
 ---
 
-### 3. ⚙️ Tab: Mixnet Krypto & Feintuning
-* **1-Klick Presets**:
-  * *⚡ Eco Mode*: 0 Cover-Traffic, minimale Latenz (~250–350 ms).
-  * *🛡️ High Privacy (Standard)*: 10 Pkt/min Cover-Rauschen, SURBs aktiv, Anti-Timing-Schutz.
-  * *🕵️ Ultra Stealth*: 35 Pkt/min Cover-Rauschen gegen Nachbarschafts- und Router-Sniffer.
-* **Poisson-Verzögerung pro Hop (5–150 ms)**: Stochastische Paketstreuung zur Zerstörung von Timing-Mustern.
-* **SURB Token Puffer (20, 50, 100, 250 Tokens)**: Vorrat an anonymen Rückkanälen für parallele Sensoren.
-* **DNS-over-Mixnet Isolation**: DNS-Abfragen werden erst am Exit-Node aufgelöst.
-* **Weltweite Exit-Nodes**: Auswahl zwischen 🇨🇭 Schweiz, 🇩🇪 Deutschland, 🇮🇸 Island, 🇫🇮 Finnland, 🇳🇱 Niederlande, 🇸🇬 Singapur, 🇺🇸 USA oder benutzerdefinierter Adresse.
+### 3. ⚙️ Tab: Mixnet Krypto & Automatische Exit-Rotation
+* **Ist weltweite Exit-Rotation sinnvoll? JA, absolut!**
+  * Wer monatelang immer dieselbe Exit-IP nutzt, kann von Webseiten wiedererkannt werden.
+  * Bei aktivierter Rotation wechselt das Gateway (z.B. alle 15 Minuten) automatisch:
+    * 🔄 **Weltweiter Pool**: Schweiz 🇨🇭 ➔ Deutschland 🇩🇪 ➔ Island 🇮🇸 ➔ Finnland 🇫🇮 ➔ Niederlande 🇳🇱 ➔ Singapur 🇸🇬 ➔ USA 🇺🇸.
+    * 🏔️ **Privacy-Haven Pool**: Nur Länder mit extrem starken Datenschutzgesetzen (Schweiz, Island, Finnland).
+    * 🇪🇺 **Europäischer Mix**: Schweiz, Deutschland, Island, Finnland, Niederlande.
+* **Poisson-Verzögerung (5–150 ms)**: Zufällige Mikroverzögerungen zerstören Timing-Muster.
+* **DNS-over-Mixnet**: DNS-Anfragen verlassen das Mixnet erst am Exit-Node.
 
 ---
 
-### 4. 💎 Tab: Nym Premium, Fast Pass & ZK-Bandwidth Tokens
-Das Nym Mixnet ist im Standard-Modus **vollkommen kostenlos und dezentral nutzbar**. Für anspruchsvolle Smart Homes bietet Nym optionale **Premium Fast-Pass / Coconut zk-nyms** Funktionen:
-
-#### 🌟 Vorteile eines kostenpflichtigen Nym-Zugangs:
-1. 🚀 **Garantierte High-Speed Bandbreite (bis 100+ Mbit/s)**:
-   * Ermöglicht das unterbrechungsfreie Streaming verschlüsselter Sicherheitskameras und rasante Offsite-Backups (z. B. vollständige HA Snapshots nach Nextcloud/Drive).
-2. ⚡ **VIP Low-Latency Mix Queues (<200–300 ms)**:
-   * Priorisierte Weiterleitung in Mixnodes. Verhindert Paketverwerfungen bei weltweiter Netzwerkauslastung.
-3. 🔐 **Statische NymID für P2P Remote-Access**:
-   * Feste kryptografische Nym-Adresse für portfreigabe-freien Fernzugriff von unterwegs (Home Assistant Companion App über Mixnet ohne Cloud-Abo).
-4. 🎫 **Zero-Knowledge Coconut Credentials (zk-nyms)**:
-   * Der Zahlungsnachweis erfolgt kryptografisch über blinde Signaturen. Nym erfährt niemals, welches Home Assistant System zu welcher Zahlung gehört!
-5. 🔐 **Passphrase- & Mnemonic-Seed Schutz**:
-   * Sichere Absicherung der lokalen kryptografischen Schlüsselpaare oder Wiederherstellung bestehender Nym-Identitäten.
+### 4. 💎 Tab: Nym Premium, Fast Pass & ZK-Tokens
+* **Kostenfrei vs. Fast Pass verständlich erklärt**:
+  * *Kostenfreier Modus*: Wie eine sichere Landstraße – perfekt für Textmeldungen und Sensoren.
+  * *Fast Pass VIP*: Wie eine reservierte VIP-Spur auf der Autobahn mit **über 100 Mbit/s Bandbreite** für Full-HD Kameras und Cloud-Backups.
+* **Zero-Knowledge Nachweis (zk-nyms)**: Durch blinde kryptografische Signaturen weiß das Netzwerk, dass bezahlt wurde, **ohne deine Identität oder dein Smart Home zu kennen!**
 
 ---
 
-### 5. 📋 Tab: YAML Vorlagen & Integration Snippets
-Fertige Kopiervorlagen für die `configuration.yaml` zur sofortigen Einbindung von Telegram-Bots, Wetter-Sensoren, IP-Checkern und Shell-Commands.
-
----
-
-## 📖 Schnellstart (1-Klick)
-
-1. Im Home Assistant Add-on Store den **Nym Privacy Hub** installieren und starten.
-2. In der linken Seitenleiste auf **Nym Privacy** klicken.
-3. Im Tab **🛡️ HA Datenquellen** deine gewünschten Schutzschilde aktivieren – fertig!
+### 5. 📋 Tab: YAML Vorlagen
+Fertige Snippets für `configuration.yaml` (Telegram, REST Sensoren, Scrape, curl).
