@@ -61,6 +61,12 @@ bashio::log.info "Ingress Dashboard gestartet (PID: ${INGRESS_PID}, Port: 8099)"
 NYM_CLIENT_DIR="/root/.nym/socks5-clients/${CLIENT_ID}"
 CONFIG_TOML="${NYM_CLIENT_DIR}/config/config.toml"
 
+# Safe provider for client init (requires valid @ address)
+INIT_PROVIDER="${PROVIDER}"
+if [[ "${INIT_PROVIDER}" == rotate_* ]] || [[ "${INIT_PROVIDER}" != *"@"* ]]; then
+    INIT_PROVIDER="${DEFAULT_PROVIDER}"
+fi
+
 # Initialize the client if not already configured
 if [ ! -f "${CONFIG_TOML}" ]; then
     bashio::log.info "Initialisiere Nym SOCKS5 Client (${CLIENT_ID}). Krypto-Schlüssel werden generiert..."
@@ -72,10 +78,10 @@ if [ ! -f "${CONFIG_TOML}" ]; then
 
     nym-socks5-client init \
         --id "${CLIENT_ID}" \
-        --provider "${PROVIDER}" \
+        --provider "${INIT_PROVIDER}" \
         ${SURB_OPT} || {
             bashio::log.warning "Init mit Zusatzoptionen fehlgeschlagen, versuche Basis-Init..."
-            nym-socks5-client init --id "${CLIENT_ID}" --provider "${PROVIDER}"
+            nym-socks5-client init --id "${CLIENT_ID}" --provider "${INIT_PROVIDER}"
         }
     
     bashio::log.info "Nym Client erfolgreich initialisiert!"
@@ -112,8 +118,28 @@ EOF
 
 bashio::log.info "Starte SOCKS5 Proxy auf 0.0.0.0:1080..."
 
-# Start SOCKS5 client
-exec nym-socks5-client run \
+# Graceful shutdown handler to preserve SURB database & crypto keys
+_cleanup() {
+    bashio::log.info "Empfange Beendigungssignal (Graceful Shutdown) - Sichere SURB-Datenbanken & Krypto-Status..."
+    if [ -n "${NYM_PID}" ] && kill -0 "${NYM_PID}" 2>/dev/null; then
+        bashio::log.info "Sende SIGTERM an Nym SOCKS5 Client (PID ${NYM_PID})..."
+        kill -TERM "${NYM_PID}" 2>/dev/null || true
+        wait "${NYM_PID}" 2>/dev/null || true
+    fi
+    if [ -n "${INGRESS_PID}" ] && kill -0 "${INGRESS_PID}" 2>/dev/null; then
+        kill -TERM "${INGRESS_PID}" 2>/dev/null || true
+    fi
+    bashio::log.info "Nym Privacy Hub sauber beendet. Alle Datenbanken intakt gesichert."
+    exit 0
+}
+
+trap _cleanup SIGTERM SIGINT SIGQUIT
+
+# Start SOCKS5 client in background and wait for clean termination
+nym-socks5-client run \
     --id "${CLIENT_ID}" \
     --host 0.0.0.0 \
-    --port 1080
+    --port 1080 &
+NYM_PID=$!
+
+wait "${NYM_PID}"

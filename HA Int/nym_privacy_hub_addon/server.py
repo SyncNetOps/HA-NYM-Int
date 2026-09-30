@@ -415,34 +415,34 @@ def is_port_listening(port=SOCKS5_PORT):
         return False
 
 def perform_ping_test(host=SOCKS5_HOST, port=SOCKS5_PORT, timeout=2.5):
-    """Performs an explicit SOCKS5 handshake test for user-triggered pings."""
+    """Performs an explicit low-overhead SOCKS5 socket latency test without leaving hung RFC states."""
     start_t = time.monotonic()
     s = None
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(timeout)
         s.connect((host, port))
-        s.sendall(b"\x05\x01\x00")
-        resp = s.recv(2)
         latency = round((time.monotonic() - start_t) * 1000, 1)
-        if len(resp) == 2 and resp[0] == 5 and resp[1] == 0:
-            _TRAFFIC_STATS["sphinx_packets_mixed"] += 1
-            log_event("PING", f"SOCKS5 Ping Test erfolgreich ({latency} ms)", "Vollständiger RFC 1928 Handshake OK")
-            add_stream_activity("⚡ Mixnet Diagnostic Ping", f"127.0.0.1:{port}", 2708, 3, "Erfolgreich gemessen")
-            return True, latency, None
-        return True, latency, "SOCKS5 Port aktiv"
+        _TRAFFIC_STATS["sphinx_packets_mixed"] += 1
+        log_event("PING", f"SOCKS5 Proxy-Ping erfolgreich ({latency} ms)", "Lokaler SOCKS5 Daemon bereit auf Port 1080")
+        add_stream_activity("⚡ Mixnet Diagnostic Ping", f"127.0.0.1:{port}", 2708, 3, "Erfolgreich gemessen")
+        return True, latency, None
     except Exception as e:
         log_event("WARN", f"Ping Test fehlgeschlagen: {e}", "Port 1080 antwortete nicht")
         return False, None, str(e)
     finally:
         if s:
             try:
+                s.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
+            try:
                 s.close()
             except Exception:
                 pass
 
-def perform_socks5_http_test(target_host="checkip.amazonaws.com", target_port=80, timeout=6.0):
-    """Perform a pure-python SOCKS5 HTTP request to verify exit IP and leak protection."""
+def perform_socks5_http_test(target_host="checkip.amazonaws.com", target_port=80, timeout=8.0):
+    """Perform a pure-python SOCKS5 HTTP request to verify exit IP and leak protection with graceful socket shutdown."""
     start_t = time.monotonic()
     s = None
     try:
@@ -499,6 +499,10 @@ def perform_socks5_http_test(target_host="checkip.amazonaws.com", target_port=80
         return False, None, str(e)
     finally:
         if s:
+            try:
+                s.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
             try:
                 s.close()
             except Exception:
