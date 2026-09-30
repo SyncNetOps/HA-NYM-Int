@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.3
+- Fix: **Graceful Shutdown & Signal-Handling (`run.sh`)**: Sicherung aller SQLite- und SURB-Datenbanken vor Prozessbeendigung; verhindert das Verwerfen von Reply-SURBs beim Add-on Neustart.
+- Fix: **Early-EOF Fehlerbehebung**: Sauberes Socket-Shutdown-Handling (`SHUT_RDWR`) in Ping- und Diagnose-Tests zur Vermeidung von Fehlern im Rust-Core.
+- Fix: **Sicherer Provider-Init**: Automatische Auflösung dynamischer Rotations-Schlüssel (`rotate_*`) bei Neuinstallationen.
+- Version-Bump: Sofortige Erkennung des Updates im Home Assistant Add-on Store.
+
 ## 1.1.2
 - Fix: **Persistente Passphrase & Mnemonic-Speicherung**: Behebt das Problem, bei dem Passphrase / 24-Wörter Seed bei Einstellungsaktualisierungen überschrieben wurden. Textfelder werden nun zuverlässig hydriert und geschützt gesichert.
 - Feat: **Sofortige Live-Verifikation für Bezahlzugänge (`/api/verify_premium`)**:
