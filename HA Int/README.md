@@ -29,7 +29,11 @@ Herkömmliche VPNs verschlüsseln zwar den Datenstrom, leiten jedoch sämtliche 
 1. 📊 **Live Cockpit**: Animierte 3-Hop Routing Topologie mit interaktivem Krypto-Inspektor, 60s Echtzeit-Durchsatzdiagramm und Live Stream Inspector.
 2. 🛡️ **HA Datenquellen-Schutz**: Dynamischer Scanner erkennt installierte Sensoren und leitet KI, Wetter/GPS, Messenger, Stromtarife und Cloud-Backups ins Mixnet.
 3. ⚙️ **Mixnet Krypto & Rotation**: Presets (Eco, High, Ultra), stufenlose Poisson-Verzögerung (5–150 ms), SURB-Puffer (20–250 Tokens) und automatisierte weltweite Exit-Rotation.
-4. 💎 **Nym Premium & Fast Pass**: Verwaltung von Bandwidth Credentials, zk-nyms (Coconut blinde Signaturen), High-Speed 100+ Mbps Queues für Backups/Kameras und Passphrase-Schutz.
+4. 💎 **Nym Premium, VIP & P2P Remote Gateway**:
+   - **🎁 Community-Aktion (1 Monat Gratis)**: Über [https://nym.com/pricing?ref=ZiAEJuHT9XS](https://nym.com/pricing?ref=ZiAEJuHT9XS) 1 Monat Nym Premium kostenlos erhalten und Entwickler unterstützen (100% anonyme Krypto-Zahlung).
+   - **🔐 P2P Remote Access Gateway**: Sicherer Fernzugriff von unterwegs via NymConnect / Home Assistant Companion App ohne Router-Portfreigaben, ohne DynDNS und ohne Cloud-Expose.
+   - **🚀 VIP High-Speed Booster & Ultra-Low Latency**: 100+ Mbit/s Durchsatz für Video-Streams und Backups mit <80 ms Schaltzeiten.
+   - **🎫 ZK-Coconut Ticketbooks**: Blinde Signaturen für vollkommene Anonymität bei Bezahlzugängen.
 5. 📋 **YAML Vorlagen**: 1-Klick Code-Snippets für die direkte Einbindung in Home Assistant.
 
 ---

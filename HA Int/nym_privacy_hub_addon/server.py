@@ -1327,6 +1327,106 @@ HTML_PAGE = """<!DOCTYPE html>
             color: #fca5a5;
         }
 
+        /* Referral & Promo Card */
+        .promo-referral-card {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(157, 104, 255, 0.08), rgba(0, 245, 160, 0.06));
+            border: 1px solid rgba(251, 191, 36, 0.38);
+            box-shadow: 0 4px 30px rgba(251, 191, 36, 0.12);
+            border-radius: var(--radius-xl);
+            padding: 22px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .promo-referral-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-gold), var(--accent-purple));
+        }
+
+        .promo-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .promo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .promo-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .promo-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        .promo-text strong {
+            color: #f8fafc;
+        }
+
+        .promo-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .promo-link-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-inner);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: var(--radius-md);
+            padding: 6px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-gold);
+            flex: 1;
+            min-width: 260px;
+            justify-content: space-between;
+        }
+
+        /* P2P Remote Access Box */
+        .p2p-remote-card {
+            background: var(--bg-inner);
+            border: 1px solid rgba(0, 245, 160, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
         /* Modal Overlay */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -1848,6 +1948,32 @@ HTML_PAGE = """<!DOCTYPE html>
                 </div>
             </div>
 
+            <!-- Referral & Community Promo Card -->
+            <div class="promo-referral-card">
+                <div class="promo-top">
+                    <div class="promo-title">
+                        <span>🎁</span> 1 Monat Nym Premium Gratis erhalten
+                    </div>
+                    <div class="promo-badge">
+                        ⭐ Community-Aktion: 1 Monat Gratis
+                    </div>
+                </div>
+                <div class="promo-text">
+                    Über diesen exklusiven Community-Link erhältst du <strong>1 Monat Nym Premium völlig kostenlos</strong> geschenkt! Gleichzeitig machst du mir als Entwickler dieser Home Assistant Integration eine große Freude: Sobald du ein kostenpflichtiges Abo abschließt, erhält das Projekt einen <strong>kostenlosen Gratis-Pass</strong> für Testzwecke und kontinuierliche Weiterentwicklung.
+                    <br><br>
+                    🔒 <strong>100% Anonym abschließen:</strong> Nym unterstützt vollständig anonyme Zahlungen (z. B. mit Kryptowährungen wie NYM, Monero, Bitcoin) ohne Angabe von Klarnamen oder Bankdaten.
+                </div>
+                <div class="promo-actions">
+                    <div class="promo-link-box">
+                        <span id="referralUrlText">https://nym.com/pricing?ref=ZiAEJuHT9XS</span>
+                        <button class="btn" style="padding: 4px 10px; font-size: 11px; margin-left: 8px;" onclick="copyReferralLink()">📋 Link Kopieren</button>
+                    </div>
+                    <a href="https://nym.com/pricing?ref=ZiAEJuHT9XS" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
+                        💎 1 Gratis-Monat sichern (Anonym) ➔
+                    </a>
+                </div>
+            </div>
+
             <!-- Verification Status Banner -->
             <div id="verificationResultBox" style="display: none;">
                 <!-- Populated dynamically -->
@@ -1942,6 +2068,43 @@ HTML_PAGE = """<!DOCTYPE html>
                         <div class="switch-ui active gold" id="vip_tunnel_toggle" onclick="toggleVipFeature('vip_p2p_remote_tunnel')">
                             <div class="switch-ui-handle"></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- P2P Remote Access Gateway Connection & Guide Panel -->
+                <div class="p2p-remote-card" id="p2pRemoteInfoBox">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 22px;">🔐</span>
+                            <div>
+                                <h4 style="color: var(--accent-emerald); font-size: 15px; font-weight: 700;">🔐 P2P Remote Access Gateway (Fernzugriff ohne Router-Ports)</h4>
+                                <p style="font-size: 12px; color: var(--text-muted);">Sicherer Zugriff auf dein Home Assistant von überall über das Nym Mixnet – ohne offene Ports, ohne DynDNS, ohne Cloud-Expose!</p>
+                            </div>
+                        </div>
+                        <span class="stream-badge" id="p2pStatusBadge" style="background: rgba(0, 245, 160, 0.15); color: var(--accent-emerald);">
+                            ● P2P Gateway Aktiv & Bereit
+                        </span>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #fff; display: block; margin-bottom: 6px;">
+                            Deine dezentrale Home Assistant Nym-ID (Ende-zu-Ende Sphinx Adresse):
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-glow); border-radius: var(--radius-md); padding: 8px 12px;">
+                            <span id="p2pNymAddress" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-emerald); word-break: break-all; flex: 1;">8BaKDvKz9ey5jspQVEVEArmnAb7YpjxGdeGBx3Cs5bZb.8PoJ6WzR3oUk1ynnDTK4aJSo5msrraUYMPPYe5UmQDYA@BSFuVD5nCpEV7Ebzi15Yh8Jzeziq8oiGEx6b4r1PMUKD</span>
+                            <button class="btn btn-primary" style="padding: 5px 12px; font-size: 11px; white-space: nowrap;" onclick="copyP2pAddress()">📋 Nym-ID Kopieren</button>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+                        <strong style="color: #fff; display: block; margin-bottom: 6px;">📖 Schritt-für-Schritt Anleitung: So verbindest du dich von unterwegs:</strong>
+                        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+                            <li><strong>NymConnect oder Nym Client</strong> auf deinem Laptop oder Smartphone installieren und starten.</li>
+                            <li>In NymConnect als Ziel-Dienst <em>Custom Service</em> wählen und obige <strong>Home Assistant Nym-ID</strong> eintragen.</li>
+                            <li>NymConnect öffnet lokal auf deinem Mobilgerät einen SOCKS5-Tunnel (z. B. <code>127.0.0.1:1080</code>).</li>
+                            <li>Öffne deinen mobilen Browser oder die <strong>Home Assistant Companion App</strong> und verbinde dich über den Proxy mit deinem Dashboard.</li>
+                            <li><strong>Höchste Sicherheit:</strong> Dein Smart Home bleibt hinter Firewalls und DS-Lite/CGNAT vollständig unsichtbar und ist dennoch weltweit sicher erreichbar!</li>
+                        </ol>
                     </div>
                 </div>
 
@@ -2104,6 +2267,20 @@ shell_command:
             });
         }
 
+        function copyReferralLink() {
+            navigator.clipboard.writeText('https://nym.com/pricing?ref=ZiAEJuHT9XS').then(() => {
+                showToast('✓ Einladungslink kopiert (1 Monat Gratis + Entwickler-Support)');
+            });
+        }
+
+        function copyP2pAddress() {
+            const addrEl = document.getElementById('p2pNymAddress');
+            const addr = addrEl ? addrEl.textContent.trim() : '';
+            navigator.clipboard.writeText(addr).then(() => {
+                showToast('✓ Dezentrale Home Assistant Nym-ID kopiert!');
+            });
+        }
+
         function onSliderChange(val) {
             const rate = parseInt(val, 10);
             const kbRate = Math.round(rate * 2.7);
@@ -2156,6 +2333,20 @@ shell_command:
             if (el) {
                 if (vipFeatures[key]) el.classList.add('active');
                 else el.classList.remove('active');
+            }
+            if (key === 'vip_p2p_remote_tunnel') {
+                const badge = document.getElementById('p2pStatusBadge');
+                if (badge) {
+                    if (vipFeatures.vip_p2p_remote_tunnel) {
+                        badge.textContent = '● P2P Gateway Aktiv & Bereit';
+                        badge.style.color = 'var(--accent-emerald)';
+                        badge.style.background = 'rgba(0, 245, 160, 0.15)';
+                    } else {
+                        badge.textContent = '○ P2P Gateway Deaktiviert';
+                        badge.style.color = 'var(--text-muted)';
+                        badge.style.background = 'rgba(255, 255, 255, 0.05)';
+                    }
+                }
             }
             saveAllSettings();
             showToast(`💎 VIP-Funktion ${key} aktualisiert`);
@@ -2442,6 +2633,26 @@ shell_command:
                         `;
                         feed.appendChild(item);
                     });
+                }
+
+                // P2P Nym Client Address & VIP Features
+                if (data.client_address) {
+                    const p2pAddrEl = document.getElementById('p2pNymAddress');
+                    if (p2pAddrEl) p2pAddrEl.textContent = data.client_address;
+                }
+                if (data.vip_features) {
+                    const p2pBadge = document.getElementById('p2pStatusBadge');
+                    if (p2pBadge) {
+                        if (data.vip_features.p2p_remote_tunnel) {
+                            p2pBadge.textContent = '● P2P Gateway Aktiv & Bereit';
+                            p2pBadge.style.color = 'var(--accent-emerald)';
+                            p2pBadge.style.background = 'rgba(0, 245, 160, 0.15)';
+                        } else {
+                            p2pBadge.textContent = '○ P2P Gateway Deaktiviert';
+                            p2pBadge.style.color = 'var(--text-muted)';
+                            p2pBadge.style.background = 'rgba(255, 255, 255, 0.05)';
+                        }
+                    }
                 }
 
                 // Render Canvas Throughput Chart

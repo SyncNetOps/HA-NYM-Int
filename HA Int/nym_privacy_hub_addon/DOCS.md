@@ -54,6 +54,10 @@ Das Add-on scannt automatisch deine Home Assistant Instanz und zählt deine akti
 ---
 
 ### 4. 💎 Tab: Nym Premium, Fast Pass & ZK-Tokens
+* **🎁 1 Monat Nym Premium Gratis & Entwickler-Support (Community-Einladungslink)**:
+  * Über den Link [https://nym.com/pricing?ref=ZiAEJuHT9XS](https://nym.com/pricing?ref=ZiAEJuHT9XS) erhältst du **1 Monat Nym Premium kostenlos**.
+  * Sobald du ein Abo abschließt, erhält der Entwickler dieser Home Assistant Integration einen kostenlosen Gratis-Pass für Tests und Weiterentwicklung.
+  * 100% anonyme Zahlung mit Kryptowährungen (NYM, Monero, Bitcoin) wird unterstützt.
 * **Kostenfrei vs. Fast Pass verständlich erklärt**:
   * *Kostenfreier Modus*: Wie eine sichere Landstraße – perfekt für Textmeldungen und Sensoren.
   * *Fast Pass VIP*: Wie eine reservierte VIP-Spur auf der Autobahn mit **über 100 Mbit/s Bandbreite** für Full-HD Kameras und Cloud-Backups.
@@ -64,7 +68,11 @@ Das Add-on scannt automatisch deine Home Assistant Instanz und zählt deine akti
   * 🚀 **100+ Mbit/s High-Speed Booster**: Schaltet priorisierte Bandbreiten-Kanäle frei.
   * ⚡ **Ultra-Low-Latency Queues**: Priorisierte Mixnode-Warteschlangen für Schaltzeiten unter 80 ms.
   * 🌐 **Multipath-Routing**: Parallele Mixnet-Routen für maximale Ausfallsicherheit.
-  * 🔒 **P2P Remote-Tunnel**: Verschlüsselter Fernzugriff auf dein Home Assistant Dashboard ohne offene Router-Ports.
+  * 🔐 **P2P Remote Access Gateway (Fernzugriff ohne Router-Ports)**:
+    * **Schritt 1**: NymConnect / Nym Client auf Mobilgerät oder Laptop starten.
+    * **Schritt 2**: Deine persönliche, im Dashboard angezeigte dezentrale Home Assistant Nym-ID als Ziel eintragen.
+    * **Schritt 3**: Home Assistant Companion App oder Browser über den lokalen SOCKS5-Tunnel (`127.0.0.1:1080`) verbinden.
+    * **Vorteil**: Weltweiter, abhörsicherer Fernzugriff – selbst hinter DS-Lite/CGNAT – ohne Portweiterleitungen, ohne DynDNS und ohne Cloud-Zwang!
 * **Zero-Knowledge Nachweis (zk-nyms)**: Durch blinde kryptografische Signaturen (Coconut) weiß das Netzwerk, dass bezahlt wurde, **ohne deine Identität oder dein Smart Home zu kennen!**
 
 ---

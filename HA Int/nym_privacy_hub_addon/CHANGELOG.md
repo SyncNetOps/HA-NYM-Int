@@ -5,12 +5,18 @@
 - Feat: **Sofortige Live-Verifikation für Bezahlzugänge (`/api/verify_premium`)**:
   - Ermöglicht das direkte Prüfen und Bestätigen von 12/24-Wörter Mnemonic Seeds oder Nym Fast-Pass VIP Tokens per Klick auf `⚡ Jetzt Prüfen & Aktivieren`.
   - Liefert detaillierte Bestätigung über ZK-Coconut Ticketbooks, Bandbreiten-Kontingent und Account-Tier mit sofortigem visuellen Feedback.
+- Feat: **🔐 P2P Remote Access Gateway Verbindungs-Zentrale & Anleitung**:
+  - Live-Anzeige der dezentralen Home Assistant Nym-Adresse (Sphinx E2E ID) mit 1-Klick Kopierfunktion.
+  - Schritt-für-Schritt Anleitung zur Verbindung von unterwegs via NymConnect / Mobile Companion App ohne Router-Portfreigaben, ohne DynDNS und ohne Cloud-Zwang.
+- Feat: **🎁 Community-Einladungslink (1 Monat Gratis & Entwickler-Support)**:
+  - Transparente Aktions-Box mit Link `https://nym.com/pricing?ref=ZiAEJuHT9XS`.
+  - Nutzer erhalten 1 Monat Nym Premium kostenlos geschenkt; der Entwickler erhält einen Gratis-Pass zur Weiterentwicklung der Home Assistant Integration. 100% anonyme Bezahlung (Kryptowährungen) unterstützt.
 - Feat: **Exklusive VIP-Funktionen & Toggles bei aktivem Bezahlzugang**:
   - Dynamisches Freischalten und Einblenden des VIP-Bedienfelds im Add-on bei verifiziertem Premium-Status.
   - 🚀 **100+ Mbit/s High-Speed Booster**: Freigabe priorisierter Bandbreiten-Kanäle für datenintensive Übertragungen (Kamera-Streams, Backups).
   - ⚡ **Ultra-Low-Latency Queues**: Priorisierte Mixnode-Warteschlangen für Smart Home Echtzeit-Schaltungen unter 80 ms.
   - 🌐 **Multipath-Routing (Bandbreiten-Bündelung)**: Paralleles Senden über mehrere Mixnet-Pfade für maximale Ausfallsicherheit und Geschwindigkeit.
-  - 🔒 **Direkter P2P Remote-Tunnel**: Ende-zu-Ende verschlüsselte Verbindung für Remote-Zugriff von unterwegs ohne Portweiterleitungen.
+  - 🔒 **Direkter P2P Remote-Tunnel**: Ende-zu-Ende verschlüsselte Verbindung für Remote-Zugriff von unterwegs.
 
 ## 1.1.1
 - Feat: **Dynamischer Home Assistant Entitäten-Scanner**: Erkennt und zählt live die in der jeweiligen Home Assistant Instanz des Benutzers tatsächlich vorhandenen Entitäten pro Datenquelle (z.B. 3 KI-Assistenten, 6 Wetter/GPS-Sensoren, 4 Messenger-Dienste, 9 Stromtarif-Sensoren, 14 REST/Scrape-Endpunkte).
