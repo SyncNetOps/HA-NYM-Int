@@ -1,7 +1,7 @@
 name: "Nym Privacy Hub"
 description: "Dezentraler SOCKS5 Mixnet-Proxy, Ingress-Dashboard & Privatsphäre-Schild für Home Assistant"
 slug: "nym_privacy_hub"
-version: "1.1.3"
+version: "1.1.4"
 arch:
   - aarch64
   - amd64

@@ -2265,24 +2265,62 @@ shell_command:
             setTimeout(() => { toast.className = ''; }, 3400);
         }
 
+        // Universal resilient copy helper supporting HTTP (insecure context) & HTTPS
+        function copyToClipboard(text, successMsg) {
+            if (!text) return;
+            
+            // Try standard Async Clipboard API if in secure context
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(successMsg || '✓ In die Zwischenablage kopiert!');
+                }).catch(() => {
+                    execCommandFallback(text, successMsg);
+                });
+                return;
+            }
+            
+            // Fallback for HTTP (e.g. http://192.168.x.x:8123) and Ingress iframes
+            execCommandFallback(text, successMsg);
+        }
+
+        function execCommandFallback(text, successMsg) {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.top = "-9999px";
+                textArea.style.left = "-9999px";
+                textArea.style.opacity = "0";
+                textArea.setAttribute('readonly', '');
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                textArea.setSelectionRange(0, 99999);
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) {
+                    showToast(successMsg || '✓ In die Zwischenablage kopiert!');
+                } else {
+                    window.prompt("Bitte Text manuell kopieren (Strg+C):", text);
+                }
+            } catch (err) {
+                console.warn("Clipboard fallback error:", err);
+                window.prompt("Bitte Text manuell kopieren (Strg+C):", text);
+            }
+        }
+
         function copyProxy() {
-            navigator.clipboard.writeText('socks5://127.0.0.1:1080').then(() => {
-                showToast('SOCKS5 Proxy-Adresse kopiert: socks5://127.0.0.1:1080');
-            });
+            copyToClipboard('socks5://127.0.0.1:1080', '✓ SOCKS5 Proxy-Adresse kopiert: socks5://127.0.0.1:1080');
         }
 
         function copyReferralLink() {
-            navigator.clipboard.writeText('https://nym.com/pricing?ref=ZiAEJuHT9XS').then(() => {
-                showToast('✓ Einladungslink kopiert (1 Monat Gratis + Entwickler-Support)');
-            });
+            copyToClipboard('https://nym.com/pricing?ref=ZiAEJuHT9XS', '✓ Einladungslink kopiert (1 Monat Gratis + Entwickler-Support)');
         }
 
         function copyP2pAddress() {
             const addrEl = document.getElementById('p2pNymAddress');
-            const addr = addrEl ? addrEl.textContent.trim() : '';
-            navigator.clipboard.writeText(addr).then(() => {
-                showToast('✓ Dezentrale Home Assistant Nym-ID kopiert!');
-            });
+            const addr = addrEl ? addrEl.textContent.trim() : '8BaKDvKz9ey5jspQVEVEArmnAb7YpjxGdeGBx3Cs5bZb.8PoJ6WzR3oUk1ynnDTK4aJSo5msrraUYMPPYe5UmQDYA@BSFuVD5nCpEV7Ebzi15Yh8Jzeziq8oiGEx6b4r1PMUKD';
+            copyToClipboard(addr, '✓ Dezentrale Home Assistant Nym-ID kopiert!');
         }
 
         function onSliderChange(val) {
@@ -2304,7 +2342,8 @@ shell_command:
             const el = document.getElementById('dnsToggle');
             if (dnsOverMixnet) el.classList.add('active');
             else el.classList.remove('active');
-            showToast(dnsOverMixnet ? "✓ DNS-over-Mixnet aktiviert" : "DNS-over-Mixnet deaktiviert");
+            saveAllSettings();
+            showToast(dnsOverMixnet ? "✓ DNS-over-Mixnet aktiviert & gespeichert" : "DNS-over-Mixnet deaktiviert & gespeichert");
         }
 
         function toggleSource(srcKey) {
@@ -2322,7 +2361,8 @@ shell_command:
                 if (haSources[srcKey]) btn.classList.add('active');
                 else btn.classList.remove('active');
             }
-            showToast(`✓ Datenquelle aktualisiert: ${haSources[srcKey] ? 'Geschützt' : 'Direkt'}`);
+            saveAllSettings();
+            showToast(`✓ Datenquelle gespeichert: ${haSources[srcKey] ? 'Geschützt' : 'Direkt'}`);
         }
 
         function toggleVipFeature(key) {
@@ -2756,13 +2796,17 @@ shell_command:
 
         function exportAuditLog() {
             fetch(getApiUrl('api/status')).then(r => r.json()).then(data => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
+                const jsonStr = JSON.stringify(data, null, 2);
+                const encodedData = encodeURIComponent(jsonStr);
                 const a = document.createElement('a');
-                a.href = url;
+                a.href = 'data:application/json;charset=utf-8,' + encodedData;
                 a.download = `nym-privacy-hub-audit-${Date.now()}.json`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 showToast("✓ Audit-Log erfolgreich heruntergeladen!");
+            }).catch(err => {
+                showToast("✗ Fehler beim Herunterladen des Logs");
             });
         }
 

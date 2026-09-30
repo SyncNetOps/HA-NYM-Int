@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4
+- Fix: **Universeller Zwischenablage-Kopierer**: Funktioniert nun auch im unsicheren HTTP-Kontext (`http://192.168.x.x:8123`) und in Home Assistant Ingress iframes via `execCommand`-Fallback und Eingabefokus.
+- Fix: **Sofortiges Persistieren bei Datenquellen-Klicks**: Schalter für `Cloud-Backups & Offsite Sync` (sowie alle weiteren Quellen und DNS-over-Mixnet) speichern ihren Zustand nun unverzüglich im Backend, sodass der periodische 3-Sekunden-Status-Poll sie nicht mehr zurücksetzt.
+- Fix: **Insecure Blob Warning Behebung**: Audit-Log Export verwendet nun Data-URIs zur Vermeidung von Browser-Warnmeldungen.
+
 ## 1.1.3
 - Fix: **Graceful Shutdown & Signal-Handling (`run.sh`)**: Sicherung aller SQLite- und SURB-Datenbanken vor Prozessbeendigung; verhindert das Verwerfen von Reply-SURBs beim Add-on Neustart.
 - Fix: **Early-EOF Fehlerbehebung**: Sauberes Socket-Shutdown-Handling (`SHUT_RDWR`) in Ping- und Diagnose-Tests zur Vermeidung von Fehlern im Rust-Core.
