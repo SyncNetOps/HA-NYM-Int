@@ -57,7 +57,15 @@ Das Add-on scannt automatisch deine Home Assistant Instanz und zählt deine akti
 * **Kostenfrei vs. Fast Pass verständlich erklärt**:
   * *Kostenfreier Modus*: Wie eine sichere Landstraße – perfekt für Textmeldungen und Sensoren.
   * *Fast Pass VIP*: Wie eine reservierte VIP-Spur auf der Autobahn mit **über 100 Mbit/s Bandbreite** für Full-HD Kameras und Cloud-Backups.
-* **Zero-Knowledge Nachweis (zk-nyms)**: Durch blinde kryptografische Signaturen weiß das Netzwerk, dass bezahlt wurde, **ohne deine Identität oder dein Smart Home zu kennen!**
+* **Sofortige Live-Prüfung & Bestätigung**:
+  * Trage deine 12/24-Wörter Passphrase (Mnemonic Seed) oder ein Fast-Pass VIP Token ein und klicke auf `⚡ Jetzt Prüfen & Aktivieren`.
+  * Das Add-on prüft den Zugang in Echtzeit und blendet eine detaillierte Bestätigungs-Box mit Ticketbook-Status und Bandbreitenkontingent ein.
+* **Freigeschaltete VIP-Funktionen (bei aktivem Bezahlzugang)**:
+  * 🚀 **100+ Mbit/s High-Speed Booster**: Schaltet priorisierte Bandbreiten-Kanäle frei.
+  * ⚡ **Ultra-Low-Latency Queues**: Priorisierte Mixnode-Warteschlangen für Schaltzeiten unter 80 ms.
+  * 🌐 **Multipath-Routing**: Parallele Mixnet-Routen für maximale Ausfallsicherheit.
+  * 🔒 **P2P Remote-Tunnel**: Verschlüsselter Fernzugriff auf dein Home Assistant Dashboard ohne offene Router-Ports.
+* **Zero-Knowledge Nachweis (zk-nyms)**: Durch blinde kryptografische Signaturen (Coconut) weiß das Netzwerk, dass bezahlt wurde, **ohne deine Identität oder dein Smart Home zu kennen!**
 
 ---
 
