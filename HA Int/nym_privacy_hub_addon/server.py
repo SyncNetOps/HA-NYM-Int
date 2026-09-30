@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Nym Privacy Hub - Ingress Dashboard & API Server
-Provides real-time UI, monitoring and diagnostics for the Add-on.
+Robust Multi-threaded Server for Home Assistant Ingress
 """
 
 import json
@@ -9,12 +9,17 @@ import os
 import socket
 import sys
 import time
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import traceback
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 PORT = 8099
 OPTIONS_PATH = "/data/options.json"
 SOCKS5_HOST = "127.0.0.1"
 SOCKS5_PORT = 1080
+
+START_TIME = time.time()
+_CACHED_STATUS = None
+_CACHED_STATUS_TIME = 0
 
 def get_options():
     try:
@@ -22,7 +27,7 @@ def get_options():
             with open(OPTIONS_PATH, "r", encoding="utf-8") as f:
                 return json.load(f)
     except Exception as e:
-        print(f"Error reading options: {e}", file=sys.stderr)
+        print(f"[WARN] Error reading options: {e}", file=sys.stderr)
     return {
         "provider": "Entztfv6Uaz2hpYHQJ6JKoaCTpDL5dja18SuQWVJAmmx.Cvhn9rBJw5Ay9wgHcbgCnVg89MPSV5s2muPV2YF1BXYu@Fo4f4SQLdoyoGkFae5TpVhRVoXCF8UiypLVGtGjujVPf",
         "use_reply_surbs": True,
@@ -38,32 +43,43 @@ def save_options(opts):
             json.dump(opts, f, indent=2)
         return True
     except Exception as e:
-        print(f"Error saving options: {e}", file=sys.stderr)
+        print(f"[ERROR] Error saving options: {e}", file=sys.stderr)
         return False
 
-def check_socks5_health(host=SOCKS5_HOST, port=SOCKS5_PORT, timeout=3.0):
+def check_socks5_health(host=SOCKS5_HOST, port=SOCKS5_PORT, timeout=1.5):
     """Performs real SOCKS5 RFC 1928 handshake probe."""
+    s = None
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(timeout)
         s.connect((host, port))
-        # Send SOCKS5 handshake: VER=5, 1 Method, NO AUTH=0
+        # Send SOCKS5 greeting: VER=5, 1 Method, NO AUTH=0
         s.sendall(b"\x05\x01\x00")
         resp = s.recv(2)
-        s.close()
         if len(resp) == 2 and resp[0] == 5 and resp[1] == 0:
             return True, None
-        return True, "Port offen (SOCKS5 bereit)"
+        return True, "SOCKS5 Port offen"
     except Exception as e:
         return False, str(e)
-
-START_TIME = time.time()
+    finally:
+        if s:
+            try:
+                s.close()
+            except Exception:
+                pass
 
 def get_stats():
+    global _CACHED_STATUS, _CACHED_STATUS_TIME
+    now = time.time()
+    # Cache health check for 2 seconds to prevent socket saturation
+    if _CACHED_STATUS and (now - _CACHED_STATUS_TIME < 2.0):
+        return _CACHED_STATUS
+
     options = get_options()
     is_socket_open, err = check_socks5_health()
     has_pass = bool(options.get("passphrase"))
-    return {
+    
+    _CACHED_STATUS = {
         "status": "connected" if is_socket_open else "initializing",
         "proxy_endpoint": f"socks5://{SOCKS5_HOST}:{SOCKS5_PORT}",
         "socket_active": is_socket_open,
@@ -72,11 +88,13 @@ def get_stats():
         "cover_traffic": options.get("cover_traffic", False),
         "cover_traffic_rate": options.get("cover_traffic_rate", 10),
         "has_passphrase": has_pass,
-        "uptime_sec": int(time.time() - START_TIME),
+        "uptime_sec": int(now - START_TIME),
         "mixnet_nodes": 839,
         "active_gateways": 607,
         "exit_nodes": 100
     }
+    _CACHED_STATUS_TIME = now
+    return _CACHED_STATUS
 
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="de">
@@ -248,12 +266,12 @@ HTML_PAGE = """<!DOCTYPE html>
     </div>
 
     <script>
-        function getApiUrl(path) {
-            let base = window.location.pathname;
-            if (!base.endsWith('/')) {
-                base += '/';
+        function getApiUrl(endpoint) {
+            let p = window.location.pathname;
+            if (!p.endsWith('/')) {
+                p += '/';
             }
-            return base + path;
+            return p + endpoint;
         }
 
         function copyProxy() {
@@ -265,6 +283,7 @@ HTML_PAGE = """<!DOCTYPE html>
         async function fetchStatus() {
             try {
                 const res = await fetch(getApiUrl('api/status'));
+                if (!res.ok) return;
                 const data = await res.json();
                 document.getElementById('proxyEndpoint').textContent = data.proxy_endpoint;
                 document.getElementById('providerInput').value = data.provider;
@@ -282,9 +301,7 @@ HTML_PAGE = """<!DOCTYPE html>
                     badge.className = 'status-badge disconnected';
                     text.textContent = 'Initialisierung...';
                 }
-            } catch(e) {
-                console.error("Status error:", e);
-            }
+            } catch(e) {}
         }
 
         async function testPing() {
@@ -293,6 +310,10 @@ HTML_PAGE = """<!DOCTYPE html>
             try {
                 const start = performance.now();
                 const res = await fetch(getApiUrl('api/test'));
+                if (!res.ok) {
+                    el.textContent = "✗ Server antwortete mit Status " + res.status;
+                    return;
+                }
                 const data = await res.json();
                 const duration = Math.round(performance.now() - start);
                 if (data.ok) {
@@ -314,9 +335,13 @@ HTML_PAGE = """<!DOCTYPE html>
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ passphrase, provider })
                 });
+                if (!res.ok) {
+                    alert('Fehler beim Speichern: Status ' + res.status);
+                    return;
+                }
                 const data = await res.json();
                 if (data.ok) {
-                    alert('Einstellungen erfolgreich gespeichert! Starte das Add-on bei Bedarf neu.');
+                    alert('Einstellungen erfolgreich gespeichert!');
                     fetchStatus();
                 }
             } catch(e) {
@@ -325,27 +350,48 @@ HTML_PAGE = """<!DOCTYPE html>
         }
 
         fetchStatus();
-        setInterval(fetchStatus, 10000);
+        setInterval(fetchStatus, 8000);
     </script>
 </body>
 </html>
 """
 
-class RequestHandler(BaseHTTPRequestHandler):
+class RobustRequestHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def _send_json(self, data, code=200):
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode("utf-8"))
+        try:
+            payload = json.dumps(data).encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            self.wfile.write(payload)
+            self.wfile.flush()
+        except Exception:
+            pass
+
+    def _send_html(self, html_content, code=200):
+        try:
+            payload = html_content.encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            self.wfile.write(payload)
+            self.wfile.flush()
+        except Exception:
+            pass
 
     def do_GET(self):
-        # Match root and any ingress prefix
-        if self.path == "/" or self.path.startswith("/?") or self.path.endswith("/") or "ingress" in self.path:
-            if self.path.endswith("/api/status") or self.path == "/api/status":
+        try:
+            clean_path = self.path.split("?")[0]
+            if clean_path.endswith("/api/status") or clean_path == "/api/status":
                 self._send_json(get_stats())
-                return
-            elif self.path.endswith("/api/test") or self.path == "/api/test":
+            elif clean_path.endswith("/api/test") or clean_path == "/api/test":
                 start_t = time.monotonic()
                 is_open, err = check_socks5_health()
                 latency = round((time.monotonic() - start_t) * 1000, 1)
@@ -354,51 +400,49 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "latency_ms": latency if is_open else None,
                     "error": err
                 })
-                return
-            
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(HTML_PAGE.encode("utf-8"))
-        elif self.path.endswith("/api/status") or self.path == "/api/status":
-            self._send_json(get_stats())
-        elif self.path.endswith("/api/test") or self.path == "/api/test":
-            start_t = time.monotonic()
-            is_open, err = check_socks5_health()
-            latency = round((time.monotonic() - start_t) * 1000, 1)
-            self._send_json({
-                "ok": is_open,
-                "latency_ms": latency if is_open else None,
-                "error": err
-            })
-        else:
-            self.send_response(404)
-            self.end_headers()
+            else:
+                self._send_html(HTML_PAGE)
+        except Exception as e:
+            print(f"[ERROR] GET handling failed: {e}", file=sys.stderr)
+            self._send_json({"error": str(e)}, 500)
 
     def do_POST(self):
-        content_len = int(self.headers.get("Content-Length", 0))
-        post_body = self.rfile.read(content_len) if content_len > 0 else b"{}"
         try:
-            body = json.loads(post_body.decode("utf-8"))
-        except Exception:
-            body = {}
+            clean_path = self.path.split("?")[0]
+            content_len = int(self.headers.get("Content-Length", 0))
+            post_body = self.rfile.read(content_len) if content_len > 0 else b"{}"
+            try:
+                body = json.loads(post_body.decode("utf-8"))
+            except Exception:
+                body = {}
 
-        if self.path.endswith("/api/save_settings") or self.path == "/api/save_settings":
-            opts = get_options()
-            if "provider" in body and body["provider"]:
-                opts["provider"] = body["provider"]
-            if "passphrase" in body:
-                opts["passphrase"] = body["passphrase"]
-            save_options(opts)
-            self._send_json({"ok": True})
-        else:
-            self.send_response(404)
-            self.end_headers()
+            if clean_path.endswith("/api/save_settings") or clean_path == "/api/save_settings":
+                opts = get_options()
+                if "provider" in body and body["provider"]:
+                    opts["provider"] = body["provider"]
+                if "passphrase" in body and body["passphrase"]:
+                    opts["passphrase"] = body["passphrase"]
+                save_options(opts)
+                self._send_json({"ok": True})
+            else:
+                self._send_json({"error": "Not found"}, 404)
+        except Exception as e:
+            print(f"[ERROR] POST handling failed: {e}", file=sys.stderr)
+            self._send_json({"error": str(e)}, 500)
+
+    def log_message(self, format, *args):
+        # Silence routine access logs in container stdout to reduce noise
+        pass
 
 def run_server():
-    server = HTTPServer(("0.0.0.0", PORT), RequestHandler)
-    print(f"Nym Privacy Hub Ingress server listening on port {PORT}...")
-    server.serve_forever()
+    print(f"Starting Multi-threaded Ingress server on 0.0.0.0:{PORT}...")
+    while True:
+        try:
+            server = ThreadingHTTPServer(("0.0.0.0", PORT), RobustRequestHandler)
+            server.serve_forever()
+        except Exception as e:
+            print(f"[CRITICAL] Server crashed, auto-restarting in 1s: {e}", file=sys.stderr)
+            time.sleep(1)
 
 if __name__ == "__main__":
     run_server()
